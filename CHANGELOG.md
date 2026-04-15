@@ -1,5 +1,17 @@
 # Change log
 
+### 0.19.0
+
+* **Drop Python 3.7 / 3.8 / 3.9 / 3.10 / 3.11** — minimum is now Python 3.12.
+* **Replace `bottle` + `gevent` with `starlette` + `uvicorn`** — the web server is now fully async (asyncio + uvicorn). No more gevent monkey-patching; compatible with all modern Python async libraries.
+* **Replace `pyparsing` with stdlib `re`** — `_find_exposed_js_functions()` replaces the old `EXPOSED_JS_FUNCTIONS` pyparsing grammar. Runtime dependency count drops from ~8 to 2 (`starlette`, `uvicorn`).
+* **Drop `importlib_resources` backport** — `importlib.resources` is now used directly from the stdlib.
+* **Drop `typing_extensions`** — all typing primitives (`Literal`, `TypedDict`, etc.) are now imported from stdlib `typing`.
+* **Modernize type annotations** — all annotations use Python 3.12 syntax (`X | Y`, `list[...]`, `dict[...]`, `tuple[...]`).
+* **Thread safety** — `_call_return_values` and `_call_return_callbacks` are now protected by `threading.Lock`; JS broadcast (`_js_call`) is scheduled on the event loop via `asyncio.run_coroutine_threadsafe` instead of iterating the websocket list from a thread.
+* **Packaging** — `setup.py` replaced by `pyproject.toml` (PEP 517/518).
+* **Path traversal protection** — static file handler now rejects paths that escape `root_path` (OWASP A01).
+
 ### 0.18.2
 
 * Switch from using `pkg_resources` to `importlib.resources`: https://github.com/python-eel/Eel/pull/766

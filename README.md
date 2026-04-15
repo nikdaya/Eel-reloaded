@@ -104,8 +104,8 @@ Some of the options include the mode the app is in (e.g. 'chrome'), the port the
 
 As of Eel v0.12.0, the following options are available to `start()`:
  - **mode**, a string specifying what browser to use (e.g. `'chrome'`, `'electron'`, `'edge'`,`'msie'`, `'custom'`). Can also be `None` or `False` to not open a window. *Default: `'chrome'`*
- - **host**, a string specifying what hostname to use for the Bottle server. *Default: `'localhost'`)*
- - **port**, an int specifying what port to use for the Bottle server. Use `0` for port to be picked automatically. *Default: `8000`*.
+ - **host**, a string specifying what hostname to use for the web server. *Default: `'localhost'`)*
+ - **port**, an int specifying what port to use for the web server. Use `0` for port to be picked automatically. *Default: `8000`*.
  - **block**, a bool saying whether or not the call to `start()` should block the calling thread. *Default: `True`*
  - **jinja_templates**, a string specifying a folder to use for Jinja2 templates, e.g. `my_templates`. *Default:  `None`*
  - **cmdline_args**, a list of strings to pass to the command to start the browser. For example, we might add extra flags for Chrome; ```eel.start('main.html', mode='chrome-app', port=8080, cmdline_args=['--start-fullscreen', '--browser-startup-dialog'])```. *Default: `[]`*
@@ -113,7 +113,11 @@ As of Eel v0.12.0, the following options are available to `start()`:
  - **position**, a tuple of ints specifying the (left, top) of the main window in pixels *Default: `None`*
  - **geometry**, a dictionary specifying the size and position for all windows. The keys should be the relative path of the page, and the values should be a dictionary of the form `{'size': (200, 100), 'position': (300, 50)}`. *Default: {}*
  - **close_callback**, a lambda or function that is called when a websocket to a window closes (i.e. when the user closes the window). It should take two arguments; a string which is the relative path of the page that just closed, and a list of other websockets that are still open. *Default: `None`*
- - **app**, an instance of Bottle which will be used rather than creating a fresh one. This can be used to install middleware on the instance before starting eel, e.g. for session management, authentication, etc. If your `app` is not a Bottle instance, you will need to call `eel.register_eel_routes(app)` on your custom app instance.
+ - **app_mode**, a bool controlling whether Chrome or Edge should be launched as an app-style window. `mode='chrome-app'` remains supported as shorthand for `mode='chrome', app_mode=True`.
+ - **all_interfaces**, a bool controlling whether the web server listens on all interfaces instead of only `localhost`.
+ - **disable_cache**, a bool controlling whether static assets are served with `Cache-Control: no-store`. *Default: `True`*
+ - **default_path**, the file served for `/`. *Default: `'index.html'`*
+ - **extra_routes**, a list of Starlette `Route` or `WebSocketRoute` objects added before Eel's static-file catch-all. Use this to attach custom HTTP endpoints to the same app.
  - **shutdown_delay**, timer configurable for Eel's shutdown detection mechanism, whereby when any websocket closes, it waits `shutdown_delay` seconds, and then checks if there are now any websocket connections. If not, then Eel closes. In case the user has closed the browser and wants to exit the program. By default, the value of **shutdown_delay** is `1.0` second
 
 
@@ -302,9 +306,9 @@ run();
 
 ## Asynchronous Python
 
-Eel is built on Bottle and Gevent, which provide an asynchronous event loop similar to Javascript. A lot of Python's standard library implicitly assumes there is a single execution thread - to deal with this, Gevent can "[monkey patch](https://en.wikipedia.org/wiki/Monkey_patch)" many of the standard modules such as `time`. ~~This monkey patching is done automatically when you call `import eel`~~. If you need monkey patching you should `import gevent.monkey` and call `gevent.monkey.patch_all()` _before_ you `import eel`. Monkey patching can interfere with things like debuggers so should be avoided unless necessary.
+Eel now runs on Starlette, Uvicorn and `asyncio`. Exposed Python functions are executed in a thread pool so the ASGI event loop stays responsive while your application code runs. There is no Gevent monkey-patching in the runtime anymore.
 
-For most cases you should be fine by avoiding using `time.sleep()` and instead using the versions provided by `gevent`. For convenience, the two most commonly needed gevent methods, `sleep()` and `spawn()` are provided directly from Eel (to save importing `time` and/or `gevent` as well).
+For most cases you should still avoid using raw `time.sleep()` in the main control flow and prefer the helpers exposed by Eel. `eel.sleep()` remains the convenient cross-example sleep primitive, and `eel.spawn()` now returns a standard `concurrent.futures.Future` instead of a Gevent greenlet.
 
 In this example...
 
@@ -326,7 +330,7 @@ while True:
     eel.sleep(1.0)                      # Use eel.sleep(), not time.sleep()
 ```
 
-...we would then have three "threads" (greenlets) running;
+...we would then have three concurrent execution contexts running;
 
 1. Eel's internal thread for serving the web folder
 2. The `my_other_thread` method, repeatedly printing **"I'm a thread"**
