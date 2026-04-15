@@ -7,11 +7,13 @@ sys.path.insert(0, str(EXAMPLE_DIR.parents[1]))
 
 import eel
 
-eel.init(str(EXAMPLE_DIR / 'web'))
+eel.init(str(EXAMPLE_DIR / "web"))
+
 
 @eel.expose
 def py_random():
     return random.random()
+
 
 @eel.expose
 def py_exception(error):
@@ -20,8 +22,9 @@ def py_exception(error):
     else:
         return "No Error"
 
+
 def print_num(n):
-    print('Got this from Javascript:', n)
+    print("Got this from Javascript:", n)
 
 
 def print_num_failed(error, stack):
@@ -29,15 +32,15 @@ def print_num_failed(error, stack):
     print("\tError: ", error)
     print("\tStack: ", stack)
 
-# Call Javascript function, and pass explicit callback function    
+
+# Call Javascript function, and pass explicit callback function
 eel.js_random()(print_num)
 
 # Do the same with an inline callback
-eel.js_random()(lambda n: print('Got this from Javascript:', n))
+eel.js_random()(lambda n: print("Got this from Javascript:", n))
 
 # Show error handling
 eel.js_with_error()(print_num, print_num_failed)
 
 
-eel.start('callbacks.html', size=(400, 300))
-
+eel.start("callbacks.html", size=(400, 300))

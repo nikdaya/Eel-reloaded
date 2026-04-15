@@ -14,6 +14,6 @@ async def custom_route(request: Request) -> PlainTextResponse:
     return PlainTextResponse("Hello from the custom route!")
 
 
-eel.init(str(EXAMPLE_DIR / 'web'))
+eel.init(str(EXAMPLE_DIR / "web"))
 
 eel.start("index.html", extra_routes=[Route("/custom", custom_route)])

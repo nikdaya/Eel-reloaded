@@ -12,6 +12,7 @@ The original Eel stagnated on Python 3.7 and aging dependencies, but its **core 
 **Eel-reloaded's goal is to modernize the infrastructure while fiercely protecting that simplicity.** The elegance of the API is the product's main value — never sacrifice it for the sake of a technical migration.
 
 ### Migration Priorities (in order)
+
 1. **Preserve the public API** — keep `@eel.expose`, Python→JS calls and `eel.start()` simple despite internal changes
 2. **Target Python 3.12+** — prefer modern standard-library features and remove obsolete compatibility shims
 3. **Keep the async stack minimal** — build on `starlette` + `uvicorn` + `asyncio`; avoid reintroducing framework complexity
