@@ -1,17 +1,19 @@
+from pathlib import Path
+import sys
+
+EXAMPLE_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(EXAMPLE_DIR.parents[1]))
+
 import eel
-import bottle
-# from beaker.middleware import SessionMiddleware
+from starlette.requests import Request
+from starlette.responses import PlainTextResponse
+from starlette.routing import Route
 
-app = bottle.Bottle()
-@app.route('/custom')
-def custom_route():
-    return 'Hello, World!'
 
-eel.init('web')
+async def custom_route(request: Request) -> PlainTextResponse:
+    return PlainTextResponse("Hello from the custom route!")
 
-# need to manually add eel routes if we are wrapping our Bottle instance with middleware
-# eel.add_eel_routes(app)
-# middleware = SessionMiddleware(app)
-# eel.start('index.html', app=middleware)
 
-eel.start('index.html', app=app)
+eel.init(str(EXAMPLE_DIR / 'web'))
+
+eel.start("index.html", extra_routes=[Route("/custom", custom_route)])

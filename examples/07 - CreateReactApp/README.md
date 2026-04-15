@@ -19,8 +19,8 @@ If you run into any issues with this example, open a [new issue](https://github.
 
 ## Quick Start
 
-1. **Configure:** In the app's directory, run `npm install` and `pip install bottle bottle-websocket future pyinstaller`
-2. **Demo:** Build static files with `npm run build` then run the application with `python eel_CRA.py`. A Chrome-app window should open running the built code from `build/`
+1. **Configure:** In the app's directory, run `npm install`. In the repository root, install Eel in editable mode with `pip install --no-build-isolation -e ".[jinja2]"`, then install PyInstaller if needed.
+2. **Demo:** Build static files with `npm run build` then run the application with `python eel_CRA.py`. A Chrome app window should open running the built code from `build/`
 3. **Distribute:** (Run `npm run build` first) Build a binary distribution with PyInstaller using `python -m eel eel_CRA.py build --onefile` (See more detailed PyInstaller instructions at bottom of [the main README](https://github.com/ChrisKnott/Eel))
 4. **Develop:** Open two prompts. In one, run  `python eel_CRA.py true` and the other, `npm start`. A browser window should open in your default web browser at: [http://localhost:3000/](http://localhost:3000/). As you make changes to the JavaScript in `src/` the browser will reload. Any changes to `eel_CRA.py` will require a restart to take effect. You may need to refresh the browser window if it gets out of sync with eel.
 
@@ -30,7 +30,7 @@ If you run into any issues with this example, open a [new issue](https://github.
 
 > Use `window.eel.expose(func, 'func')` to circumvent `npm run build` code mangling
 
-`npm run build` will rename variables and functions to minimize file size renaming `eel.expose(funcName)` to something like `D.expose(J)`. The renaming breaks Eel's static JS-code analyzer, which uses a regular expression to look for `eel.expose(*)`. To fix this issue, in your JS code, convert all `eel.expose(funcName)` to `window.eel(funcName, 'funcName')`. This workaround guarantees that 'funcName' will be available to call from Python.
+`npm run build` will rename variables and functions to minimize file size renaming `eel.expose(funcName)` to something like `D.expose(J)`. The renaming breaks Eel's static JS-code analyzer, which looks for `eel.expose(...)`. To fix this issue, convert calls to `window.eel.expose(funcName, 'funcName')`. This guarantees that `funcName` will be available to call from Python.
 
 ## Main Files
 

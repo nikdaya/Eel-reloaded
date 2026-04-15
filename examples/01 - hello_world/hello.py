@@ -1,7 +1,13 @@
+from pathlib import Path
+import sys
+
+EXAMPLE_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(EXAMPLE_DIR.parents[1]))
+
 import eel
 
 # Set web files folder
-eel.init('web')
+eel.init(str(EXAMPLE_DIR / 'web'))
 
 @eel.expose                         # Expose this function to Javascript
 def say_hello_py(x):

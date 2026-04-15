@@ -1,14 +1,13 @@
-"""Main Python application file for the EEL-CRA demo."""
-
 import os
 import platform
+from pathlib import Path
 import random
 import sys
 
-import eel
+BASE_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(BASE_DIR.parents[1]))
 
-# Use latest version of Eel from parent directory
-sys.path.insert(1, '../../')
+import eel
 
 
 @eel.expose  # Expose function to JavaScript
@@ -41,15 +40,17 @@ def start_eel(develop):
     """Start Eel with either production or development configuration."""
 
     if develop:
-        directory = 'src'
-        app = None
+        directory = BASE_DIR / 'src'
+        browser_mode = 'default'
+        app_mode = False
         page = {'port': 3000}
     else:
-        directory = 'build'
-        app = 'chrome-app'
+        directory = BASE_DIR / 'build'
+        browser_mode = 'chrome'
+        app_mode = True
         page = 'index.html'
 
-    eel.init(directory, ['.tsx', '.ts', '.jsx', '.js', '.html'])
+    eel.init(str(directory), ['.tsx', '.ts', '.jsx', '.js', '.html'])
 
     # These will be queued until the first connection is made, but won't be repeated on a page reload
     say_hello_py('Python World!')
@@ -61,9 +62,10 @@ def start_eel(develop):
         host='localhost',
         port=8080,
         size=(1280, 800),
+        app_mode=app_mode,
     )
     try:
-        eel.start(page, mode=app, **eel_kwargs)
+        eel.start(page, mode=browser_mode, **eel_kwargs)
     except EnvironmentError:
         # If Chrome isn't found, fallback to Microsoft Edge on Win10 or greater
         if sys.platform in ['win32', 'win64'] and int(platform.release()) >= 10:
