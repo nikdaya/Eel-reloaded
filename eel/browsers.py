@@ -1,7 +1,7 @@
 from __future__ import annotations
 import subprocess as sps
 import webbrowser as wbr
-from typing import Union, List, Dict, Iterable, Optional
+from typing import Iterable, Union
 from types import ModuleType
 
 from eel.types import OptionsDictT
@@ -9,35 +9,40 @@ import eel.chrome as chm
 import eel.electron as ele
 import eel.edge as edge
 import eel.msIE as ie
-#import eel.firefox as ffx      TODO
-#import eel.safari as saf       TODO
 
-_browser_paths: Dict[str, str] = {}
-_browser_modules: Dict[str, ModuleType] = {'chrome':   chm,
-                                           'electron': ele,
-                                           'edge': edge,
-                                           'msie':ie}
+# import eel.firefox as ffx      TODO
+# import eel.safari as saf       TODO
+
+_browser_paths: dict[str, str] = {}
+_browser_modules: dict[str, ModuleType] = {
+    "chrome": chm,
+    "electron": ele,
+    "edge": edge,
+    "msie": ie,
+}
 
 
-def _build_url_from_dict(page: Dict[str, str], options: OptionsDictT) -> str:
-    scheme = page.get('scheme', 'http')
-    host = page.get('host', 'localhost')
-    port = page.get('port', options["port"])
-    path = page.get('path', '')
+def _build_url_from_dict(page: dict[str, str], options: OptionsDictT) -> str:
+    scheme = page.get("scheme", "http")
+    host = page.get("host", "localhost")
+    port = page.get("port", options["port"])
+    path = page.get("path", "")
     if not isinstance(port, (int, str)):
         raise TypeError("'port' option must be an integer")
-    return '%s://%s:%d/%s' % (scheme, host, int(port), path)
+    return "%s://%s:%d/%s" % (scheme, host, int(port), path)
 
 
 def _build_url_from_string(page: str, options: OptionsDictT) -> str:
-    if not isinstance(options['port'], (int, str)):
+    if not isinstance(options["port"], (int, str)):
         raise TypeError("'port' option must be an integer")
-    base_url = 'http://%s:%d/' % (options['host'], int(options['port']))
+    base_url = "http://%s:%d/" % (options["host"], int(options["port"]))
     return base_url + page
 
 
-def _build_urls(start_pages: Iterable[Union[str, Dict[str, str]]], options: OptionsDictT) -> List[str]:
-    urls: List[str] = []
+def _build_urls(
+    start_pages: Iterable[Union[str, dict[str, str]]], options: OptionsDictT
+) -> list[str]:
+    urls: list[str] = []
 
     for page in start_pages:
         if isinstance(page, dict):
@@ -49,22 +54,25 @@ def _build_urls(start_pages: Iterable[Union[str, Dict[str, str]]], options: Opti
     return urls
 
 
-def open(start_pages: Iterable[Union[str, Dict[str, str]]], options: OptionsDictT) -> None:
+def open(
+    start_pages: Iterable[Union[str, dict[str, str]]], options: OptionsDictT
+) -> None:
     # Build full URLs for starting pages (including host and port)
     start_urls = _build_urls(start_pages, options)
-    
-    mode = options.get('mode')
+
+    mode = options.get("mode")
     if not isinstance(mode, (str, type(None))) and mode is not False:
         raise TypeError("'mode' option must by either a string, False, or None")
     if mode is None or mode is False:
         # Don't open a browser
         pass
-    elif mode == 'custom':
+    elif mode == "custom":
         # Just run whatever command the user provided
-        if not isinstance(options['cmdline_args'], list):
+        if not isinstance(options["cmdline_args"], list):
             raise TypeError("'cmdline_args' option must be of type List[str]")
-        sps.Popen(options['cmdline_args'],
-                  stdout=sps.PIPE, stderr=sps.PIPE, stdin=sps.PIPE)
+        sps.Popen(
+            options["cmdline_args"], stdout=sps.PIPE, stderr=sps.PIPE, stdin=sps.PIPE
+        )
     elif mode in _browser_modules:
         # Run with a specific browser
         browser_module = _browser_modules[mode]
@@ -88,6 +96,5 @@ def set_path(browser_name: str, path: str) -> None:
     _browser_paths[browser_name] = path
 
 
-def get_path(browser_name: str) -> Optional[str]:
+def get_path(browser_name: str) -> str | None:
     return _browser_paths.get(browser_name)
-

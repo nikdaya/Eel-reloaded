@@ -1,42 +1,30 @@
 from __future__ import annotations
-from typing import Union, Dict, List, Tuple, Callable, Optional, Any, TYPE_CHECKING
-from typing_extensions import Literal, TypedDict, TypeAlias
-from bottle import Bottle
+from typing import Any, Callable, Literal, TYPE_CHECKING, TypedDict
 
-# This business is slightly awkward, but needed for backward compatibility,
-# because Python <3.10 doesn't support TypeAlias, jinja2 may not be available
-# at runtime, and geventwebsocket.websocket doesn't have type annotations so
-# that direct imports will raise an error.
+# TYPE_CHECKING guards keep runtime dependencies on jinja2 and starlette optional.
 if TYPE_CHECKING:
-    from jinja2 import Environment
-    JinjaEnvironmentT: TypeAlias = Environment
-    from geventwebsocket.websocket import WebSocket
-    WebSocketT: TypeAlias = WebSocket
+    from jinja2 import Environment as JinjaEnvironmentT
+    from starlette.websockets import WebSocket as WebSocketT
 else:
-    JinjaEnvironmentT: TypeAlias = Any
-    WebSocketT: TypeAlias = Any
+    JinjaEnvironmentT = Any
+    WebSocketT = Any
 
-OptionsDictT = TypedDict(
-    'OptionsDictT',
-    {
-        'mode': Optional[Union[str, Literal[False]]],
-        'host': str,
-        'port': int,
-        'block': bool,
-        'jinja_templates': Optional[str],
-        'cmdline_args': List[str],
-        'size': Optional[Tuple[int, int]],
-        'position': Optional[Tuple[int, int]],
-        'geometry': Dict[str, Tuple[int, int]],
-        'close_callback': Optional[Callable[..., Any]],
-        'app_mode': bool,
-        'all_interfaces': bool,
-        'disable_cache': bool,
-        'default_path': str,
-        'app': Bottle,
-        'shutdown_delay': float,
-        'suppress_error': bool,
-        'jinja_env': JinjaEnvironmentT,
-    },
-    total=False
-)
+
+class OptionsDictT(TypedDict, total=False):
+    mode: str | Literal[False] | None
+    host: str
+    port: int
+    block: bool
+    jinja_templates: str | None
+    cmdline_args: list[str]
+    size: tuple[int, int] | None
+    position: tuple[int, int] | None
+    geometry: dict[str, tuple[int, int]]
+    close_callback: Callable[..., Any] | None
+    app_mode: bool
+    all_interfaces: bool
+    disable_cache: bool
+    default_path: str
+    shutdown_delay: float
+    suppress_error: bool
+    jinja_env: JinjaEnvironmentT
