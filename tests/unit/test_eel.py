@@ -42,6 +42,12 @@ def test_init():
     assert result == functions, f"Expected {functions} (found: {result}) in {INIT_DIR}"
 
 
+def test_init_excludes_paths_from_js_scan():
+    eel.init(path=INIT_DIR, exclude_paths=["hello.html"])
+
+    assert sorted(eel._js_functions) == ["say_hello_js", "show_log", "show_log_alt"]
+
+
 def test_inject_icon_link_uses_default_icon():
     eel._start_args["icon"] = None
     html = "<html><head><title>Test</title></head><body>Hello</body></html>"

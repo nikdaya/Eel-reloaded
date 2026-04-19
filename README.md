@@ -95,6 +95,8 @@ This will start a webserver on the default settings (http://localhost:8000) and 
 
 If Chrome or Chromium is installed then by default it will open in that in App Mode (with the `--app` cmdline flag), regardless of what the OS's default browser is set to (it is possible to override this behaviour).
 
+If you have a large frontend bundle and do not need Python to call JS functions exposed from every asset, pass `exclude_paths=[...]` to `eel.init()` to skip selected files or directories while Eel-reloaded scans for `eel.expose(...)` declarations.
+
 ### App options
 
 Additional options can be passed to `eel.start()` as keyword arguments.
@@ -213,7 +215,7 @@ import eel
 
 # Set web files folder and optionally specify which file types to check for eel.expose()
 #   *Default allowed_extensions are: ['.js', '.html', '.txt', '.htm', '.xhtml']
-eel.init('web', allowed_extensions=['.js', '.html'])
+eel.init('web', allowed_extensions=['.js', '.html'], exclude_paths=['build/static'])
 
 @eel.expose                         # Expose this function to Javascript
 def say_hello_py(x):

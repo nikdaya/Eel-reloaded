@@ -158,9 +158,25 @@ def _find_exposed_js_functions(contents: str) -> list[str]:
     return result
 
 
+def _is_excluded_scan_path(scan_path: str, excluded_scan_paths: list[str]) -> bool:
+    normalized_scan_path = os.path.normcase(os.path.normpath(scan_path))
+
+    for excluded_scan_path in excluded_scan_paths:
+        normalized_excluded_scan_path = os.path.normcase(
+            os.path.normpath(os.path.join(root_path, excluded_scan_path))
+        )
+        if normalized_scan_path == normalized_excluded_scan_path:
+            return True
+        if normalized_scan_path.startswith(normalized_excluded_scan_path + os.sep):
+            return True
+
+    return False
+
+
 def init(
     path: str,
     allowed_extensions: list[str] = [".js", ".html", ".txt", ".htm", ".xhtml", ".vue"],
+    exclude_paths: list[str] | None = None,
     js_result_timeout: int = 10000,
 ) -> None:
     """Initialise Eel.
@@ -177,12 +193,16 @@ def init(
         but any JavaScript functions, even if marked as exposed, will not be
         accessible from python.
         *Default:* :code:`['.js', '.html', '.txt', '.htm', '.xhtml', '.vue']`.
+    :param exclude_paths: Optional list of files or directories relative to the
+        initialised web root that should be skipped while scanning for exposed
+        JavaScript functions.
     :param js_result_timeout: How long Eel should be waiting to register the
         results from a call to Eel's JavaScript API before before timing out.
         *Default:* :code:`10000` milliseconds.
     """
     global root_path, _js_functions, _js_result_timeout
     root_path = _get_real_path(path)
+    exclude_paths = exclude_paths or []
 
     js_functions = set()
     for root, _, files in os.walk(root_path):
@@ -190,8 +210,12 @@ def init(
             if not any(name.endswith(ext) for ext in allowed_extensions):
                 continue
 
+            file_path = os.path.join(root, name)
+            if _is_excluded_scan_path(file_path, exclude_paths):
+                continue
+
             try:
-                with open(os.path.join(root, name), encoding="utf-8") as file:
+                with open(file_path, encoding="utf-8") as file:
                     contents = file.read()
                     matches = _find_exposed_js_functions(contents)
                     js_functions.update(matches)
