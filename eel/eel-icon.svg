@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Eel-reloaded icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#155e75"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="112" height="112" rx="28" fill="url(#bg)"/>
+  <path d="M42 33h40c8 0 14 6 14 14s-6 14-14 14H54v6h24c8 0 14 6 14 14s-6 14-14 14H42V33z" fill="#ecfeff"/>
+  <path d="M83 34c16 8 25 20 25 33 0 19-16 34-40 38" fill="none" stroke="url(#accent)" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="92" cy="38" r="5" fill="#fff7ed"/>
+</svg>

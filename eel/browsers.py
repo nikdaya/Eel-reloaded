@@ -4,7 +4,7 @@ import webbrowser as wbr
 from typing import Iterable, Union
 from types import ModuleType
 
-from eel.types import OptionsDictT
+from eel.types import OptionsDictT, StartPageT
 import eel.chrome as chm
 import eel.electron as ele
 import eel.edge as edge
@@ -22,7 +22,7 @@ _browser_modules: dict[str, ModuleType] = {
 }
 
 
-def _build_url_from_dict(page: dict[str, str], options: OptionsDictT) -> str:
+def _build_url_from_dict(page: dict[str, str | int], options: OptionsDictT) -> str:
     scheme = page.get("scheme", "http")
     host = page.get("host", "localhost")
     port = page.get("port", options["port"])
@@ -39,9 +39,7 @@ def _build_url_from_string(page: str, options: OptionsDictT) -> str:
     return base_url + page
 
 
-def _build_urls(
-    start_pages: Iterable[Union[str, dict[str, str]]], options: OptionsDictT
-) -> list[str]:
+def _build_urls(start_pages: Iterable[StartPageT], options: OptionsDictT) -> list[str]:
     urls: list[str] = []
 
     for page in start_pages:
@@ -54,9 +52,7 @@ def _build_urls(
     return urls
 
 
-def open(
-    start_pages: Iterable[Union[str, dict[str, str]]], options: OptionsDictT
-) -> None:
+def open(start_pages: Iterable[StartPageT], options: OptionsDictT) -> None:
     # Build full URLs for starting pages (including host and port)
     start_urls = _build_urls(start_pages, options)
 

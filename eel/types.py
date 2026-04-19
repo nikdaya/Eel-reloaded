@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Callable, Literal, TYPE_CHECKING, TypedDict
+from typing import Any, Callable, Literal, TYPE_CHECKING, TypeAlias, TypedDict
 
 # TYPE_CHECKING guards keep runtime dependencies on jinja2 and starlette optional.
 if TYPE_CHECKING:
@@ -8,6 +8,9 @@ if TYPE_CHECKING:
 else:
     JinjaEnvironmentT = Any
     WebSocketT = Any
+
+
+StartPageT: TypeAlias = str | dict[str, str | int]
 
 
 class OptionsDictT(TypedDict, total=False):
@@ -25,6 +28,7 @@ class OptionsDictT(TypedDict, total=False):
     all_interfaces: bool
     disable_cache: bool
     default_path: str
+    icon: str | Literal[False] | None
     shutdown_delay: float
     suppress_error: bool
     jinja_env: JinjaEnvironmentT

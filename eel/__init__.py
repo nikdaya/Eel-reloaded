@@ -12,7 +12,7 @@ import threading
 import concurrent.futures
 from contextlib import asynccontextmanager
 from typing import Any, Callable, Literal
-from eel.types import OptionsDictT, WebSocketT
+from eel.types import OptionsDictT, StartPageT, WebSocketT
 import random as rnd
 import importlib.resources as importlib_resources
 import uvicorn
@@ -30,6 +30,10 @@ _eel_js_reference = importlib_resources.files("eel") / "eel.js"
 with importlib_resources.as_file(_eel_js_reference) as _eel_js_path:
     _eel_js: str = _eel_js_path.read_text(encoding="utf-8")
 
+_eel_icon_reference = importlib_resources.files("eel") / "eel-icon.svg"
+with importlib_resources.as_file(_eel_icon_reference) as _eel_icon_path:
+    _eel_icon: str = _eel_icon_path.read_text(encoding="utf-8")
+
 _websockets: list[tuple[Any, WebSocket]] = []
 _call_return_values: dict[Any, Any] = {}
 _call_return_callbacks: dict[
@@ -42,6 +46,7 @@ _mock_queue: list[Any] = []
 _mock_queue_done: set[Any] = set()
 _shutdown: asyncio.TimerHandle | None = None
 _loop: asyncio.AbstractEventLoop | None = None
+_server: uvicorn.Server | None = None
 _loop_ready = threading.Event()
 _executor: concurrent.futures.ThreadPoolExecutor = (
     concurrent.futures.ThreadPoolExecutor()
@@ -201,7 +206,7 @@ def init(
 
 
 def start(
-    *start_urls: str,
+    *start_urls: StartPageT,
     mode: str | Literal[False] | None = "chrome",
     host: str = "localhost",
     port: int = 8000,
@@ -216,6 +221,7 @@ def start(
     all_interfaces: bool = False,
     disable_cache: bool = True,
     default_path: str = "index.html",
+    icon: str | Literal[False] | None = None,
     shutdown_delay: float = 1.0,
     suppress_error: bool = False,
     extra_routes: list | None = None,
@@ -277,6 +283,11 @@ def start(
     :param disable_cache: Sets the no-store response header when serving
         assets.
     :param default_path: The default file to retrieve for the root URL.
+    :param icon: Fallback icon used when the served HTML page does not define
+        its own ``<link rel="icon">``. Pass a web path/URL such as
+        :code:`'/assets/app-icon.svg'` to use your own asset, leave as
+        ``None`` to use the bundled Eel-reloaded icon, or pass ``False`` to
+        disable automatic icon injection.
     :param shutdown_delay: Timer configurable for Eel's shutdown detection
         mechanism, whereby when any websocket closes, it waits *shutdown_delay*
         seconds, and then checks if there are now any websocket connections.
@@ -311,6 +322,7 @@ def start(
             "all_interfaces": all_interfaces,
             "disable_cache": disable_cache,
             "default_path": default_path,
+            "icon": icon,
             "shutdown_delay": shutdown_delay,
             "suppress_error": suppress_error,
         }
@@ -350,6 +362,8 @@ def start(
             raise TypeError("'host' start_arg/option must be of type str")
         HOST = _start_args["host"]
 
+    global _server
+
     asgi_app = _build_asgi_app()
     config = uvicorn.Config(
         app=asgi_app,
@@ -358,6 +372,7 @@ def start(
         log_level="error",
     )
     server = uvicorn.Server(config)
+    _server = server
 
     if _start_args["block"]:
         server.run()
@@ -441,6 +456,8 @@ async def _lifespan(app: Starlette):  # type: ignore[type-arg]
 def _build_asgi_app() -> Starlette:
     routes = [
         Route("/eel.js", _eel_js_handler),
+        Route("/eel-reloaded-icon.svg", _eel_icon_handler),
+        Route("/favicon.ico", _favicon_handler),
         Route("/", _root_handler),
         WebSocketRoute("/eel", _websocket_handler),
         *_extra_routes,
@@ -464,6 +481,27 @@ async def _eel_js_handler(request: Request) -> Response:
     return Response(content=page, media_type="application/javascript", headers=headers)
 
 
+async def _eel_icon_handler(request: Request) -> Response:
+    return Response(
+        content=_eel_icon,
+        media_type="image/svg+xml",
+        headers=_cache_headers(),
+    )
+
+
+async def _favicon_handler(request: Request) -> Response:
+    favicon_path = os.path.join(root_path, "favicon.ico")
+    real_favicon = os.path.realpath(favicon_path)
+    real_root = os.path.realpath(root_path)
+    if real_favicon.startswith(real_root + os.sep) and os.path.isfile(real_favicon):
+        response = FileResponse(real_favicon)
+        for key, value in _cache_headers().items():
+            response.headers[key] = value
+        return response
+
+    return await _eel_icon_handler(request)
+
+
 async def _root_handler(request: Request) -> Response:
     if not isinstance(_start_args["default_path"], str):
         raise TypeError("'default_path' start_arg/option must be of type str")
@@ -483,9 +521,7 @@ async def _serve_static(path: str) -> Response:
         if path.startswith(template_prefix):
             n = len(template_prefix)
             template = _start_args["jinja_env"].get_template(path[n:])
-            return Response(
-                template.render(), media_type="text/html", headers=_cache_headers()
-            )
+            return _build_html_response(template.render())
 
     file_path = os.path.join(root_path, path)
     # Prevent path traversal (OWASP A01)
@@ -495,10 +531,52 @@ async def _serve_static(path: str) -> Response:
         return Response("Forbidden", status_code=403)
     if not os.path.isfile(real_file):
         return Response("Not Found", status_code=404)
+    if path.endswith((".html", ".htm", ".xhtml")):
+        with open(real_file, encoding="utf-8") as html_file:
+            return _build_html_response(html_file.read())
     response = FileResponse(real_file)
     for key, value in _cache_headers().items():
         response.headers[key] = value
     return response
+
+
+def _build_html_response(html: str) -> Response:
+    return Response(
+        content=_inject_icon_link(html),
+        media_type="text/html",
+        headers=_cache_headers(),
+    )
+
+
+def _inject_icon_link(html: str) -> str:
+    icon_href = _get_icon_href()
+    if icon_href is None:
+        return html
+
+    if rgx.search(r"<link[^>]+rel=[\"'][^\"']*icon[^\"']*[\"']", html, rgx.IGNORECASE):
+        return html
+
+    icon_link = f'<link rel="icon" href="{icon_href}">'
+    head_close = rgx.search(r"</head\s*>", html, rgx.IGNORECASE)
+    if head_close is not None:
+        return (
+            html[: head_close.start()] + icon_link + "\n" + html[head_close.start() :]
+        )
+
+    return icon_link + "\n" + html
+
+
+def _get_icon_href() -> str | None:
+    icon = _start_args.get("icon")
+    if icon is False:
+        return None
+    if icon is None:
+        return "/eel-reloaded-icon.svg"
+    if not isinstance(icon, str):
+        raise TypeError("'icon' start_arg/option must be of type str, False, or None")
+    if "://" in icon or icon.startswith(("/", "data:")):
+        return icon
+    return "/" + icon.lstrip("/")
 
 
 async def _websocket_handler(websocket: WebSocket) -> None:
@@ -681,7 +759,8 @@ def _expose(name: str, function: Callable[..., Any]) -> None:
 
 def _detect_shutdown() -> None:
     if len(_websockets) == 0:
-        sys.exit()
+        if _server is not None:
+            _server.should_exit = True
 
 
 def _websocket_close(page: str) -> None:

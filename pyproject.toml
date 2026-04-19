@@ -3,11 +3,11 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Eel"
+name = "eel-reloaded"
 version = "0.19.0"
 description = "For little HTML GUI applications, with easy Python/JS interop"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 authors = [
     { name = "Python Eel Organisation", email = "python-eel@protonmail.com" },
 ]
@@ -24,21 +24,22 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
-    "License :: OSI Approved :: MIT License",
 ]
 
 [project.optional-dependencies]
 jinja2 = ["jinja2>=3.0"]
 
 [project.urls]
-Homepage = "https://github.com/python-eel/Eel"
+Homepage = "https://github.com/nikdaya/Eel-reloaded"
+Repository = "https://github.com/nikdaya/Eel-reloaded"
+Issues = "https://github.com/nikdaya/Eel-reloaded/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["eel*"]
 
 [tool.setuptools.package-data]
-eel = ["eel.js", "py.typed"]
+eel = ["eel-icon.svg", "eel.js", "py.typed"]
 
 [tool.mypy]
 strict = true
