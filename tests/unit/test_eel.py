@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import eel
 import pytest
 from tests.utils import TEST_DATA_DIR
@@ -38,3 +40,52 @@ def test_init():
     result = eel._js_functions.sort()
     functions = ["show_log", "js_random", "show_log_alt", "say_hello_js"].sort()
     assert result == functions, f"Expected {functions} (found: {result}) in {INIT_DIR}"
+
+
+def test_inject_icon_link_uses_default_icon():
+    eel._start_args["icon"] = None
+    html = "<html><head><title>Test</title></head><body>Hello</body></html>"
+
+    result = eel._inject_icon_link(html)
+
+    assert '<link rel="icon" href="/eel-reloaded-icon.svg">' in result
+
+
+def test_inject_icon_link_preserves_existing_icon():
+    eel._start_args["icon"] = "/custom-icon.svg"
+    html = (
+        '<html><head><link rel="icon" href="/existing.ico"></head>'
+        "<body>Hello</body></html>"
+    )
+
+    result = eel._inject_icon_link(html)
+
+    assert result == html
+
+
+def test_inject_icon_link_can_be_disabled():
+    eel._start_args["icon"] = False
+    html = "<html><head><title>Test</title></head><body>Hello</body></html>"
+
+    result = eel._inject_icon_link(html)
+
+    assert result == html
+
+
+def test_get_icon_href_normalizes_relative_paths():
+    eel._start_args["icon"] = "assets/app-icon.svg"
+
+    assert eel._get_icon_href() == "/assets/app-icon.svg"
+
+
+def test_runtime_package_does_not_use_pkg_resources():
+    source = Path(eel.__file__).read_text(encoding="utf-8")
+
+    assert "pkg_resources" not in source
+    assert "importlib.resources" in source
+
+
+def test_eel_js_exposes_connection_failure_apis():
+    assert "ready: function" in eel._eel_js
+    assert "set_connection_timeout: function" in eel._eel_js
+    assert "_handle_connection_failure: function" in eel._eel_js

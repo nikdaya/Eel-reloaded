@@ -1,5 +1,6 @@
 import os
 import platform
+import shutil
 from unittest import mock
 
 import pytest
@@ -8,22 +9,40 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from webdriver_manager.chrome import ChromeDriverManager
 
 
+def _build_chrome_driver(options: webdriver.ChromeOptions) -> webdriver.Chrome:
+    chromedriver_path = shutil.which("chromedriver")
+    if chromedriver_path:
+        return webdriver.Chrome(
+            service=ChromeService(chromedriver_path),
+            options=options,
+        )
+
+    # Selenium Manager is bundled with Selenium 4 and can usually resolve an
+    # appropriate local driver without hitting webdriver_manager's network path.
+    try:
+        return webdriver.Chrome(options=options)
+    except Exception:
+        return webdriver.Chrome(
+            service=ChromeService(ChromeDriverManager().install()),
+            options=options,
+        )
+
+
 @pytest.fixture
 def driver():
     TEST_BROWSER = os.environ.get("TEST_BROWSER", "chrome").lower()
 
     if TEST_BROWSER == "chrome":
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless=new')
+        options.add_argument("--headless=new")
         options.set_capability("goog:loggingPrefs", {"browser": "ALL"})
 
         if platform.system() == "Windows":
-            options.binary_location = "C:/Program Files/Google/Chrome/Application/chrome.exe"
+            options.binary_location = (
+                "C:/Program Files/Google/Chrome/Application/chrome.exe"
+            )
 
-        driver = webdriver.Chrome(
-            service=ChromeService(ChromeDriverManager().install()),
-            options=options,
-        )
+        driver = _build_chrome_driver(options)
 
     # Firefox doesn't currently supported pulling JavaScript console logs, which we currently scan to affirm that
     # JS/Python can communicate in some places. So for now, we can't really use firefox/geckodriver during testing.

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Connection Failure</title>
+    <script type="text/javascript" src="/eel.js"></script>
+    <script type="text/javascript">
+        eel.set_host('http://127.0.0.1:9');
+        eel.set_connection_timeout(250);
+
+        async function boot() {
+            const status = document.getElementById('status');
+
+            try {
+                await eel.get_app_state()();
+                status.textContent = 'resolved';
+            } catch (error) {
+                status.textContent = 'rejected';
+                console.error('EEL_CONNECTION_REJECTED', error && error.message ? error.message : String(error));
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', boot);
+    </script>
+</head>
+
+<body>
+    <div id="status">pending</div>
+</body>
+
+</html>
