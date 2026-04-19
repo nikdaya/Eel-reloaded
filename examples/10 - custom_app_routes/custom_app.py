@@ -11,7 +11,7 @@ from starlette.routing import Route
 
 
 async def custom_route(request: Request) -> PlainTextResponse:
-    return PlainTextResponse("Hello from the custom route!")
+    return PlainTextResponse("Hello, World!")
 
 
 eel.init(str(EXAMPLE_DIR / "web"))

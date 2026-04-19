@@ -64,18 +64,26 @@ def start_eel(develop):
 
     eel.show_log("https://github.com/samuelhwilliams/Eel/issues/363 (show_log)")
 
-    eel_kwargs = dict(
-        host="localhost",
-        port=8080,
-        size=(1280, 800),
-        app_mode=app_mode,
-    )
     try:
-        eel.start(page, mode=browser_mode, **eel_kwargs)
+        eel.start(
+            page,
+            mode=browser_mode,
+            host="localhost",
+            port=8080,
+            size=(1280, 800),
+            app_mode=app_mode,
+        )
     except EnvironmentError:
         # If Chrome isn't found, fallback to Microsoft Edge on Win10 or greater
         if sys.platform in ["win32", "win64"] and int(platform.release()) >= 10:
-            eel.start(page, mode="edge", **eel_kwargs)
+            eel.start(
+                page,
+                mode="edge",
+                host="localhost",
+                port=8080,
+                size=(1280, 800),
+                app_mode=app_mode,
+            )
         else:
             raise
 
