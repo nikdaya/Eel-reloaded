@@ -10,6 +10,9 @@
 * **Modernize type annotations** — all annotations use Python 3.12 syntax (`X | Y`, `list[...]`, `dict[...]`, `tuple[...]`).
 * **Thread safety** — `_call_return_values` and `_call_return_callbacks` are now protected by `threading.Lock`; JS broadcast (`_js_call`) is scheduled on the event loop via `asyncio.run_coroutine_threadsafe` instead of iterating the websocket list from a thread.
 * **Packaging** — `setup.py` replaced by `pyproject.toml` (PEP 517/518).
+* **Distribution rename** — the published package metadata is now `eel-reloaded`; the runtime import path remains `import eel` for compatibility.
+* **Bundled app icon** — served HTML pages now get a default Eel-reloaded favicon when they do not define one, and `eel.start(icon=...)` can override or disable it.
+* **JS bridge failure path** — pending `await eel.some_call()()` promises are now rejected when the websocket never opens or closes unexpectedly, with `eel.ready()` and `eel.set_connection_timeout(ms)` available for explicit bootstrap control.
 * **Path traversal protection** — static file handler now rejects paths that escape `root_path` (OWASP A01).
 
 ### 0.18.2

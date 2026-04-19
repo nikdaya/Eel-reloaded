@@ -1,33 +1,30 @@
-# Eel
+# Eel-reloaded
 
-> [!CAUTION]
-> This project is effectively unmaintained. It has not received regular update in a number of years, and there are no plans by active maintainers for this to change. Please treat this project in that light and use it with careful consideration towards how you will secure and maintain anything you build using it.
+> [!IMPORTANT]
+> Eel-reloaded is a modernization fork of the original Eel project. It keeps the familiar `import eel` API for small HTML/JS desktop-style apps, while updating the runtime for modern Python and a maintained ASGI stack.
 
-[![PyPI version](https://img.shields.io/pypi/v/Eel?style=for-the-badge)](https://pypi.org/project/Eel/)
-[![PyPi Downloads](https://img.shields.io/pypi/dm/Eel?style=for-the-badge)](https://pypistats.org/packages/eel)
-![Python](https://img.shields.io/pypi/pyversions/Eel?style=for-the-badge)
-[![License](https://img.shields.io/pypi/l/Eel.svg?style=for-the-badge)](https://pypi.org/project/Eel/)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 
-Eel is a little Python library for making simple Electron-like offline HTML/JS GUI apps, with full access to Python capabilities and libraries.
+Eel-reloaded is a little Python library for making simple Electron-like offline HTML/JS GUI apps, with full access to Python capabilities and libraries.
 
-> **Eel hosts a local webserver, then lets you annotate functions in Python so that they can be called from Javascript, and vice versa.**
+> **Eel-reloaded hosts a local webserver, then lets you annotate functions in Python so that they can be called from Javascript, and vice versa.**
 
-Eel is designed to take the hassle out of writing short and simple GUI applications. If you are familiar with Python and web development, probably just jump to [this example](https://github.com/ChrisKnott/Eel/tree/master/examples/04%20-%20file_access) which picks random file names out of the given folder (something that is impossible from a browser).
+Eel-reloaded is designed to take the hassle out of writing short and simple GUI applications. If you are familiar with Python and web development, probably just jump to [this example](examples/04%20-%20file_access) which picks random file names out of the given folder (something that is impossible from a browser).
 
-<p align="center"><img src="https://raw.githubusercontent.com/samuelhwilliams/Eel/master/examples/04%20-%20file_access/Screenshot.png" ></p>
+<p align="center"><img src="examples/04%20-%20file_access/Screenshot.png" ></p>
 
 <!-- TOC -->
 
-- [Eel](#eel)
+- [Eel-reloaded](#eel-reloaded)
   - [Intro](#intro)
   - [Install](#install)
   - [Usage](#usage)
     - [Directory Structure](#directory-structure)
     - [Starting the app](#starting-the-app)
     - [App options](#app-options)
-      - [Chrome/Chromium flags](#chromechromium-flags)
     - [Exposing functions](#exposing-functions)
-    - [Eello, World!](#eello-world)
+    - [Hello, World!](#hello-world)
     - [Return values](#return-values)
       - [Callbacks](#callbacks)
       - [Synchronous returns](#synchronous-returns)
@@ -43,31 +40,33 @@ There are several options for making GUI apps in Python, but if you want to use 
 
 The closest Python equivalent to Electron (to my knowledge) is [cefpython](https://github.com/cztomczak/cefpython). It is a bit heavy weight for what I wanted.
 
-Eel is not as fully-fledged as Electron or cefpython - it is probably not suitable for making full blown applications like Atom - but it is very suitable for making the GUI equivalent of little utility scripts that you use internally in your team.
+Eel-reloaded is not as fully-fledged as Electron or cefpython - it is probably not suitable for making full blown applications like Atom - but it is very suitable for making the GUI equivalent of little utility scripts that you use internally in your team.
 
-For some reason many of the best-in-class number crunching and maths libraries are in Python (Tensorflow, Numpy, Scipy etc) but many of the best visualization libraries are in Javascript (D3, THREE.js etc). Hopefully Eel makes it easy to combine these into simple utility apps for assisting your development.
+For some reason many of the best-in-class number crunching and maths libraries are in Python (Tensorflow, Numpy, Scipy etc) but many of the best visualization libraries are in Javascript (D3, THREE.js etc). Hopefully Eel-reloaded makes it easy to combine these into simple utility apps for assisting your development.
 
-Join Eel's users and maintainers on [Discord](https://discord.com/invite/3nqXPFX), if you like.
+This fork aims to preserve the original ergonomics while replacing the legacy Bottle/Gevent runtime with Starlette, Uvicorn, and `asyncio`.
+
+Source code for this fork lives at [nikdaya/Eel-reloaded](https://github.com/nikdaya/Eel-reloaded).
 
 ## Install
 
-Install from pypi with `pip`:
+Install from PyPI with `pip`:
 
 ```shell
-pip install eel
+pip install eel-reloaded
 ```
 
-To include support for HTML templating, currently using [Jinja2](https://pypi.org/project/Jinja2/#description):
+The distribution name is `eel-reloaded`, while the import path remains `eel` for compatibility. To include support for HTML templating, currently using [Jinja2](https://pypi.org/project/Jinja2/#description):
 
 ```shell
-pip install eel[jinja2]
+pip install "eel-reloaded[jinja2]"
 ```
 
 ## Usage
 
 ### Directory Structure
 
-An Eel application will be split into a frontend consisting of various web-technology files (.html, .js, .css) and a backend consisting of various Python scripts.
+An Eel-reloaded application will be split into a frontend consisting of various web-technology files (.html, .js, .css) and a backend consisting of various Python scripts.
 
 All the frontend files should be put in a single directory (they can be further divided into folders inside this if necessary).
 
@@ -102,7 +101,7 @@ Additional options can be passed to `eel.start()` as keyword arguments.
 
 Some of the options include the mode the app is in (e.g. 'chrome'), the port the app runs on, the host name of the app, and adding additional command line flags.
 
-As of Eel v0.12.0, the following options are available to `start()`:
+The following options are available to `start()`:
  - **mode**, a string specifying what browser to use (e.g. `'chrome'`, `'electron'`, `'edge'`,`'msie'`, `'custom'`). Can also be `None` or `False` to not open a window. *Default: `'chrome'`*
  - **host**, a string specifying what hostname to use for the web server. *Default: `'localhost'`)*
  - **port**, an int specifying what port to use for the web server. Use `0` for port to be picked automatically. *Default: `8000`*.
@@ -117,8 +116,9 @@ As of Eel v0.12.0, the following options are available to `start()`:
  - **all_interfaces**, a bool controlling whether the web server listens on all interfaces instead of only `localhost`.
  - **disable_cache**, a bool controlling whether static assets are served with `Cache-Control: no-store`. *Default: `True`*
  - **default_path**, the file served for `/`. *Default: `'index.html'`*
- - **extra_routes**, a list of Starlette `Route` or `WebSocketRoute` objects added before Eel's static-file catch-all. Use this to attach custom HTTP endpoints to the same app.
- - **shutdown_delay**, timer configurable for Eel's shutdown detection mechanism, whereby when any websocket closes, it waits `shutdown_delay` seconds, and then checks if there are now any websocket connections. If not, then Eel closes. In case the user has closed the browser and wants to exit the program. By default, the value of **shutdown_delay** is `1.0` second
+ - **icon**, fallback icon injected into served HTML pages when they do not already define a favicon. Pass a web path/URL such as `'/assets/app-icon.svg'`, leave as default for the bundled Eel-reloaded icon, or set `False` to disable injection.
+ - **extra_routes**, a list of Starlette `Route` or `WebSocketRoute` objects added before Eel-reloaded's static-file catch-all. Use this to attach custom HTTP endpoints to the same app.
+ - **shutdown_delay**, timer configurable for Eel-reloaded's shutdown detection mechanism, whereby when any websocket closes, it waits `shutdown_delay` seconds, and then checks if there are now any websocket connections. If not, then the app shuts down. By default, the value of **shutdown_delay** is `1.0` second
 
 
 
@@ -131,6 +131,8 @@ In addition to the files in the frontend folder, a Javascript library will be se
 ```
 
 Including this library creates an `eel` object which can be used to communicate with the Python side.
+
+The frontend bridge now exposes `eel.ready()` and `eel.set_connection_timeout(ms)`. `eel.ready()` resolves when the websocket is usable and rejects if the initial connection fails, while pending `await eel.some_python_call()()` calls are now rejected instead of hanging forever when the websocket never opens.
 
 Any functions in the Python code which are decorated with `@eel.expose` like this...
 
@@ -173,9 +175,9 @@ eel.expose(someFunction, "my_javascript_function");
 
 When passing complex objects as arguments, bear in mind that internally they are converted to JSON and sent down a websocket (a process that potentially loses information).
 
-### Eello, World!
+### Hello, World!
 
-> See full example in: [examples/01 - hello_world](https://github.com/ChrisKnott/Eel/tree/master/examples/01%20-%20hello_world)
+> See full example in: [examples/01 - hello_world](examples/01%20-%20hello_world)
 
 Putting this together into a **Hello, World!** example, we have a short HTML page, `web/hello.html`:
 
@@ -306,9 +308,9 @@ run();
 
 ## Asynchronous Python
 
-Eel now runs on Starlette, Uvicorn and `asyncio`. Exposed Python functions are executed in a thread pool so the ASGI event loop stays responsive while your application code runs. There is no Gevent monkey-patching in the runtime anymore.
+Eel-reloaded now runs on Starlette, Uvicorn and `asyncio`. Exposed Python functions are executed in a thread pool so the ASGI event loop stays responsive while your application code runs. There is no Gevent monkey-patching in the runtime anymore.
 
-For most cases you should still avoid using raw `time.sleep()` in the main control flow and prefer the helpers exposed by Eel. `eel.sleep()` remains the convenient cross-example sleep primitive, and `eel.spawn()` now returns a standard `concurrent.futures.Future` instead of a Gevent greenlet.
+For most cases you should still avoid using raw `time.sleep()` in the main control flow and prefer the helpers exposed by Eel-reloaded. `eel.sleep()` remains the convenient cross-example sleep primitive, and `eel.spawn()` now returns a standard `concurrent.futures.Future` instead of a Gevent greenlet.
 
 In this example...
 
@@ -332,7 +334,7 @@ while True:
 
 ...we would then have three concurrent execution contexts running;
 
-1. Eel's internal thread for serving the web folder
+1. Eel-reloaded's internal server thread for serving the web folder
 2. The `my_other_thread` method, repeatedly printing **"I'm a thread"**
 3. The main Python thread, which would be stuck in the final `while` loop, repeatedly printing **"I'm a main loop"**
 
@@ -353,5 +355,5 @@ Consult the [documentation for PyInstaller](http://PyInstaller.readthedocs.io/en
 
 For Windows 10 users, Microsoft Edge (`eel.start(.., mode='edge')`) is installed by default and a useful fallback if a preferred browser is not installed. See the examples:
 
-- A Hello World example using Microsoft Edge: [examples/01 - hello_world-Edge/](https://github.com/ChrisKnott/Eel/tree/master/examples/01%20-%20hello_world-Edge)
-- Example implementing browser-fallbacks: [examples/07 - CreateReactApp/eel_CRA.py](https://github.com/ChrisKnott/Eel/tree/master/examples/07%20-%20CreateReactApp/eel_CRA.py)
+- A Hello World example using Microsoft Edge: [examples/01 - hello_world-Edge/](examples/01%20-%20hello_world-Edge)
+- Example implementing browser-fallbacks: [examples/07 - CreateReactApp/eel_CRA.py](examples/07%20-%20CreateReactApp/eel_CRA.py)

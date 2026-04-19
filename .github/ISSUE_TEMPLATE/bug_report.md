@@ -7,8 +7,8 @@ assignees: ''
 
 ---
 
-**Eel version**
-Please state the version of Eel you're using.
+**Eel-reloaded version**
+Please state the version of Eel-reloaded you're using, and mention whether you installed it from this fork, from PyPI as `eel-reloaded`, or from an editable checkout.
 
 **Describe the bug**
 A clear and concise description of what the bug is.

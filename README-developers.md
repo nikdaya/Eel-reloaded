@@ -1,14 +1,15 @@
-# Eel Developers
+# Eel-reloaded Developers
 
 ## Setting up your environment
 
-In order to start developing with Eel you'll need to checkout the code, set up a development and testing environment, and check that everything is in order.
+In order to start developing with Eel-reloaded you'll need to check out the code, set up a development and testing environment, and verify that everything is in order.
 
 **Python 3.12 or later is required.**
 
 ### Clone the repository
 ```bash
-git clone git@github.com:python-eel/Eel.git
+git clone https://github.com/nikdaya/Eel-reloaded.git
+cd Eel-reloaded
 ```
 
 ### Create a virtual environment
@@ -32,7 +33,9 @@ pip install -r requirements-test.txt
 pip install -r requirements-meta.txt   # optional: tox
 ```
 
-This installs Eel's runtime dependencies (`starlette`, `uvicorn`) plus all test dependencies.
+This installs Eel-reloaded's runtime dependencies (`starlette`, `uvicorn`) plus all test dependencies.
+
+The editable install still exposes the runtime package as `import eel`, but the distribution metadata is `eel-reloaded`.
 
 ### (Recommended) Run Automated Tests
 
