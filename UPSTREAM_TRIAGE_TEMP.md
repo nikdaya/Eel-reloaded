@@ -18,7 +18,7 @@ Delete this file after the upstream items below have been either implemented in 
 
 | PR | Title | Why it matters for Eel-reloaded | Notes |
 | --- | --- | --- | --- |
-| #681 | Make Eel work with Microsoft Edge on Linux | Useful platform support extension with limited surface area. | Pairs well with the other Edge PRs. |
+| #681 | Make Eel work with Microsoft Edge on Linux | Useful platform support extension with limited surface area. | In progress in the fork via direct Linux executable discovery with `shutil.which`. |
 | #756 | Pass Arguments to jinja Template | Useful feature for Jinja users. | Not urgent; requires careful adaptation to current templating flow. |
 | #687 | Add websocket reconnect functionality | May improve resilience after backend restarts. | High behavioral risk because the fork already changed websocket failure handling. |
 
