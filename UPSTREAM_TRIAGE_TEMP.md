@@ -11,8 +11,8 @@ Delete this file after the upstream items below have been either implemented in 
 | #761 | Fix JS memory leak + modernize `eel.js` | Strong candidate for the current JS bridge; touches only `eel/__init__.py` and `eel/eel.js`. | Compare carefully against local JS bridge changes already added in `eel-reloaded`. |
 | #760 | Fixes #757 | Minimal fix for the JS-side callback retention leak. | Already effectively covered in the current fork: callbacks are deleted before `resolve/reject` in `eel.js`. |
 | #697 | Increase initialisation speed by optionally excluding files to scan | Direct response to `eel.init()` slowness on large frontend bundles. | In progress in the fork via `exclude_paths` support for init-time JS scanning. |
-| #612 | Run Edge in app mode | Small, local feature improvement in `eel/edge.py`. | Good candidate if Edge support is still a priority in the fork. |
-| #626 | Edge Build with `--noconsole` Crash Fix | Potentially valuable packaging/runtime fix with narrow scope. | Review together with `#612`. |
+| #612 | Run Edge in app mode | Small, local feature improvement in `eel/edge.py`. | Already effectively present in the current fork. |
+| #626 | Edge Build with `--noconsole` Crash Fix | Potentially valuable packaging/runtime fix with narrow scope. | In progress in the fork via safer Edge subprocess stream handling. |
 
 ### Medium Priority
 
