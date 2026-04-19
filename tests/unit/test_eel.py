@@ -1,4 +1,6 @@
+import asyncio
 from pathlib import Path
+from unittest import mock
 
 import eel
 import pytest
@@ -48,6 +50,60 @@ def test_init_excludes_paths_from_js_scan():
     assert sorted(eel._js_functions) == ["say_hello_js", "show_log", "show_log_alt"]
 
 
+def test_start_waits_for_server_before_show(monkeypatch):
+    order = []
+
+    class FakeServer:
+        def __init__(self, config):
+            self.config = config
+            self.should_exit = False
+
+        def run(self):
+            order.append("run")
+            eel._loop_ready.set()
+
+    monkeypatch.setattr(eel, "_build_asgi_app", lambda: object())
+    monkeypatch.setattr(eel.uvicorn, "Server", FakeServer)
+    monkeypatch.setattr(eel, "show", lambda *start_urls: order.append("show"))
+
+    eel.start("index.html", mode=False, block=False)
+
+    assert order == ["run", "show"]
+
+
+def test_websocket_close_with_callback_still_schedules_shutdown(monkeypatch):
+    scheduled = {}
+    callback = mock.Mock()
+
+    class FakeLoop:
+        def call_later(self, delay, func):
+            scheduled["delay"] = delay
+            scheduled["func"] = func
+            return "handle"
+
+    monkeypatch.setattr(eel, "_loop", FakeLoop())
+    monkeypatch.setattr(eel, "_shutdown", None)
+    monkeypatch.setattr(eel, "_websockets", [])
+    eel._start_args["close_callback"] = callback
+    eel._start_args["shutdown_delay"] = 1.5
+
+    eel._websocket_close("index.html")
+
+    callback.assert_called_once_with("index.html", [])
+    assert scheduled == {"delay": 1.5, "func": eel._detect_shutdown}
+
+
+def test_detect_shutdown_requests_server_exit(monkeypatch):
+    server = mock.Mock()
+
+    monkeypatch.setattr(eel, "_server", server)
+    monkeypatch.setattr(eel, "_websockets", [])
+
+    eel._detect_shutdown()
+
+    assert server.should_exit is True
+
+
 def test_inject_icon_link_uses_default_icon():
     eel._start_args["icon"] = None
     html = "<html><head><title>Test</title></head><body>Hello</body></html>"
@@ -82,6 +138,16 @@ def test_get_icon_href_normalizes_relative_paths():
     eel._start_args["icon"] = "assets/app-icon.svg"
 
     assert eel._get_icon_href() == "/assets/app-icon.svg"
+
+
+def test_favicon_handler_falls_back_to_bundled_icon(tmp_path, monkeypatch):
+    eel._start_args["disable_cache"] = True
+    monkeypatch.setattr(eel, "root_path", str(tmp_path))
+
+    response = asyncio.run(eel._favicon_handler(mock.Mock()))
+
+    assert response.media_type == "image/svg+xml"
+    assert b"<svg" in response.body
 
 
 def test_runtime_package_does_not_use_pkg_resources():

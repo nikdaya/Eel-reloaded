@@ -376,9 +376,6 @@ def start(
             "got a {}".format(type(_start_args["shutdown_delay"]))
         )
 
-    # Launch the browser to the starting URLs
-    show(*start_urls)
-
     if _start_args["all_interfaces"] is True:
         HOST = "0.0.0.0"
     else:
@@ -398,12 +395,25 @@ def start(
     server = uvicorn.Server(config)
     _server = server
 
+    _loop_ready.clear()
+    server_thread = threading.Thread(target=server.run, daemon=not _start_args["block"])
+    server_thread.start()
+
+    if not _loop_ready.wait(timeout=5.0):
+        server.should_exit = True
+        server_thread.join(timeout=5.0)
+        raise RuntimeError("Eel server did not become ready within 5 seconds")
+
+    try:
+        # Launch the browser only after the ASGI server is ready to accept connections.
+        show(*start_urls)
+    except Exception:
+        server.should_exit = True
+        server_thread.join(timeout=5.0)
+        raise
+
     if _start_args["block"]:
-        server.run()
-    else:
-        t = threading.Thread(target=server.run, daemon=True)
-        t.start()
-        _loop_ready.wait(timeout=5.0)
+        server_thread.join()
 
 
 def show(*start_urls: str) -> None:
@@ -799,13 +809,11 @@ def _websocket_close(page: str) -> None:
             )
         sockets = [p for _, p in _websockets]
         close_callback(page, sockets)
-    else:
-        if _shutdown is not None:
-            _shutdown.cancel()
-        if _loop is not None:
-            _shutdown = _loop.call_later(
-                _start_args["shutdown_delay"], _detect_shutdown
-            )
+
+    if _shutdown is not None:
+        _shutdown.cancel()
+    if _loop is not None:
+        _shutdown = _loop.call_later(_start_args["shutdown_delay"], _detect_shutdown)
 
 
 def _cache_headers() -> dict[str, str]:

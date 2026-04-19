@@ -38,15 +38,15 @@ Delete this file after the upstream items below have been either implemented in 
 | --- | --- | --- | --- |
 | #757 | Memory leak: allocated data got in JS from Python is never freed | Real bug with clear repro; matches current JS bridge area. | #760, #761 |
 | #689 | `init` function is considerable slowness | Important for users shipping large SPA bundles. | #697 |
-| #650 | Cannot read properties of undefined (reading `send`) | Historically important websocket startup/failure issue. | Partially mitigated by current JS failure-path work; re-evaluate after leak fixes. |
-| #561 | Browser pops up before server is properly initialized | Classic startup race. | No direct PR selected; current fork already improved related behavior. |
-| #692 | `shutdown_delay` doesn't work | Relevant because shutdown semantics changed in the fork. | Re-test against current runtime before implementing anything. |
+| #650 | Cannot read properties of undefined (reading `send`) | Historically important websocket startup/failure issue. | Current fork already guards JS sends behind `WebSocket.OPEN` and rejects failed calls instead of throwing on undefined send. |
+| #561 | Browser pops up before server is properly initialized | Classic startup race. | Implemented in the fork by launching the browser only after server readiness. |
+| #692 | `shutdown_delay` doesn't work | Relevant because shutdown semantics changed in the fork. | Implemented in the fork by scheduling shutdown even when `close_callback` is present. |
 
 ### Medium Priority
 
 | Issue | Title | Why it matters for Eel-reloaded | Related PR |
 | --- | --- | --- | --- |
-| #690 | Icon issue | Likely at least partially addressed by the new fallback favicon behavior. | No direct PR needed unless gaps remain. |
+| #690 | Icon issue | Likely at least partially addressed by the new fallback favicon behavior. | Re-tested in the fork with fallback favicon handler coverage. |
 | #718 | Edge Chromium App mode | Good UX improvement on Windows. | #612 |
 | #703 | Eel with threading doesn't recognize exposed functions | Still worth validating on the fork because threading behavior changed with the ASGI migration. | None yet |
 | #702 | Eel sometimes takes infinitely long to render a webpage | Startup/render stability issue; may overlap with websocket readiness changes. | Possibly adjacent to #687 |
@@ -60,7 +60,7 @@ Delete this file after the upstream items below have been either implemented in 
 | #751 | Error in `eel.show` with specified coordinates and dimensions | Likely API gap/bug, but not as urgent as memory or startup behavior. |
 | #753 | `eel.expose()` does not work with a dynamic js function name | Could require analyzer changes; lower short-term value. |
 | #536 | Invalid frame header under heavy websocket load | Important, but may need dedicated repro and may not match the new runtime failure mode exactly. |
-| #610 | Program still running after user closes the window | Re-test first, because shutdown handling has already changed in the fork. |
+| #610 | Program still running after user closes the window | Re-test first, because shutdown handling has already changed in the fork. Likely only addressable at the server loop level, not arbitrary user threads. |
 
 ## Recommended Implementation Order
 
