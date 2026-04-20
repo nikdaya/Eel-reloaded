@@ -9,6 +9,10 @@ import eel
 
 eel.init(str(EXAMPLE_DIR / "web"))  # Give folder containing web files
 
+context = eel.get_context()
+context.set("users", ["Alice", "Bob", "Charlie"])
+context.set("title", "Hello from Eel!")
+
 
 @eel.expose
 def py_random():

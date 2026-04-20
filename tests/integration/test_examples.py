@@ -67,10 +67,18 @@ def test_04_file_access(driver: webdriver.Remote):
 
 def test_06_jinja_templates(driver: webdriver.Remote):
     with get_eel_server(
-        "examples/06 - jinja_templates/hello.py", "templates/hello.html"
+        "examples/06 - jinja_templates/hello.py",
+        "templates/hello.html",
+        use_repo_code=True,
     ) as eel_url:
         driver.get(eel_url)
         assert driver.title == "Hello, World!"
+
+        h1_element = driver.find_element(By.CSS_SELECTOR, "h1")
+        assert h1_element.text == "Hello from Eel!"
+
+        user_elements = driver.find_elements(By.CSS_SELECTOR, "ul li")
+        assert [user.text for user in user_elements] == ["Alice", "Bob", "Charlie"]
 
         driver.find_element(By.CSS_SELECTOR, "a").click()
         WebDriverWait(driver, 2.0).until(

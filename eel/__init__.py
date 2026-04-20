@@ -64,6 +64,25 @@ _start_args: OptionsDictT = {}
 # Extra Starlette routes injected via eel.start(extra_routes=[...])
 _extra_routes: list = []
 
+
+class Context:
+    """Container for variables injected into Jinja template rendering."""
+
+    def __init__(self) -> None:
+        self._variables: dict[str, Any] = {}
+
+    def set(self, name: str, value: Any) -> None:
+        self._variables[name] = value
+
+    def get(self, name: str) -> Any:
+        return self._variables.get(name)
+
+    def get_all(self) -> dict[str, Any]:
+        return self._variables.copy()
+
+
+_context: Context = Context()
+
 # == Temporary (suppressible) error message to inform users of breaking API change for v1.0.0 ===
 api_error_message: str = """
 ----------------------------------------------------------------------------------
@@ -129,6 +148,11 @@ def expose(name_or_function: Callable[..., Any] | None = None) -> Callable[..., 
         function = name_or_function
         _expose(function.__name__, function)
         return function
+
+
+def get_context() -> Context:
+    """Return the global Jinja template context container."""
+    return _context
 
 
 # Regex to find JS functions exposed via eel.expose() or window.eel.expose().
@@ -555,7 +579,7 @@ async def _serve_static(path: str) -> Response:
         if path.startswith(template_prefix):
             n = len(template_prefix)
             template = _start_args["jinja_env"].get_template(path[n:])
-            return _build_html_response(template.render())
+            return _build_html_response(template.render(**_context.get_all()))
 
     file_path = os.path.join(root_path, path)
     # Prevent path traversal (OWASP A01)

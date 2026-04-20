@@ -50,6 +50,40 @@ def test_init_excludes_paths_from_js_scan():
     assert sorted(eel._js_functions) == ["say_hello_js", "show_log", "show_log_alt"]
 
 
+def test_get_context_returns_global_context_container():
+    context = eel.get_context()
+    sentinel = object()
+
+    context.set("sentinel", sentinel)
+
+    assert eel.get_context().get("sentinel") is sentinel
+
+
+def test_jinja_template_render_uses_context_values(monkeypatch):
+    rendered = {}
+
+    class FakeTemplate:
+        def render(self, **kwargs):
+            rendered.update(kwargs)
+            return "<html></html>"
+
+    class FakeEnv:
+        def get_template(self, name):
+            assert name == "hello.html"
+            return FakeTemplate()
+
+    eel.get_context().set("title", "Hello from Eel!")
+    eel.get_context().set("users", ["Alice", "Bob", "Charlie"])
+    eel._start_args["jinja_env"] = FakeEnv()
+    eel._start_args["jinja_templates"] = "templates"
+
+    response = asyncio.run(eel._serve_static("templates/hello.html"))
+
+    assert response.media_type == "text/html"
+    assert rendered["title"] == "Hello from Eel!"
+    assert rendered["users"] == ["Alice", "Bob", "Charlie"]
+
+
 def test_start_waits_for_server_before_show(monkeypatch):
     order = []
 

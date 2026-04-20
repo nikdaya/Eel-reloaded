@@ -19,7 +19,7 @@ Delete this file after the upstream items below have been either implemented in 
 | PR | Title | Why it matters for Eel-reloaded | Notes |
 | --- | --- | --- | --- |
 | #681 | Make Eel work with Microsoft Edge on Linux | Useful platform support extension with limited surface area. | In progress in the fork via direct Linux executable discovery with `shutil.which`. |
-| #756 | Pass Arguments to jinja Template | Useful feature for Jinja users. | Not urgent; requires careful adaptation to current templating flow. |
+| #756 | Pass Arguments to jinja Template | Useful feature for Jinja users. | Implemented in the fork via `eel.get_context()` and template context injection. |
 | #687 | Add websocket reconnect functionality | May improve resilience after backend restarts. | High behavioral risk because the fork already changed websocket failure handling. |
 
 ### Low Priority / Likely Skip For Now
@@ -64,11 +64,10 @@ Delete this file after the upstream items below have been either implemented in 
 
 ## Recommended Implementation Order
 
-1. Review PR `#761` and adopt only the parts that still make sense after local JS bridge changes.
-2. Finish and validate PR `#697`-style support for `eel.init()` scan exclusions.
-4. Re-test issues `#692`, `#610`, `#650`, `#561`, and `#690` against the current fork before writing code.
-5. If Edge support remains in scope, review PRs `#612`, `#626`, and `#681` together.
-6. Leave PR `#687` until the websocket lifecycle is more settled.
+1. Finish and validate PR `#756`-style Jinja template context support.
+2. Re-test React/build issues `#674` and `#732` against the current fork.
+3. Revisit PR `#761` only for non-invasive improvements that still add value beyond the already-ported leak fix.
+4. Leave PR `#687` until the websocket lifecycle is more settled.
 
 ## Cleanup Reminder
 
