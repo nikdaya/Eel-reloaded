@@ -13,6 +13,11 @@ else:
 StartPageT: TypeAlias = str | dict[str, str | int]
 
 
+class GeometryRectT(TypedDict, total=False):
+    size: tuple[int, int] | None
+    position: tuple[int, int] | None
+
+
 class OptionsDictT(TypedDict, total=False):
     mode: str | Literal[False] | None
     host: str
@@ -22,7 +27,7 @@ class OptionsDictT(TypedDict, total=False):
     cmdline_args: list[str]
     size: tuple[int, int] | None
     position: tuple[int, int] | None
-    geometry: dict[str, tuple[int, int]]
+    geometry: dict[str, GeometryRectT]
     close_callback: Callable[..., Any] | None
     app_mode: bool
     all_interfaces: bool

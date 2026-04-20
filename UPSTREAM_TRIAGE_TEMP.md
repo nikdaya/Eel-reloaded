@@ -6,66 +6,90 @@ Delete this file after the upstream items below have been either implemented in 
 
 ### High Priority
 
-| PR | Title | Why it matters for Eel-reloaded | Notes |
-| --- | --- | --- | --- |
-| #761 | Fix JS memory leak + modernize `eel.js` | Strong candidate for the current JS bridge; touches only `eel/__init__.py` and `eel/eel.js`. | Reviewed in the fork: the leak fix is already covered, while the remaining ES6 refactor is too invasive to port without a separate payoff. |
-| #760 | Fixes #757 | Minimal fix for the JS-side callback retention leak. | Already effectively covered in the current fork: callbacks are deleted before `resolve/reject` in `eel.js`. |
-| #697 | Increase initialisation speed by optionally excluding files to scan | Direct response to `eel.init()` slowness on large frontend bundles. | In progress in the fork via `exclude_paths` support for init-time JS scanning. |
-| #612 | Run Edge in app mode | Small, local feature improvement in `eel/edge.py`. | Already effectively present in the current fork. |
-| #626 | Edge Build with `--noconsole` Crash Fix | Potentially valuable packaging/runtime fix with narrow scope. | In progress in the fork via safer Edge subprocess stream handling. |
+| PR   | Title                                                               | Why it matters for Eel-reloaded                                                              | Notes                                                                                                                                      |
+| ---- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| #761 | Fix JS memory leak + modernize `eel.js`                             | Strong candidate for the current JS bridge; touches only `eel/__init__.py` and `eel/eel.js`. | Reviewed in the fork: the leak fix is already covered, while the remaining ES6 refactor is too invasive to port without a separate payoff. |
+| #760 | Fixes #757                                                          | Minimal fix for the JS-side callback retention leak.                                         | Already effectively covered in the current fork: callbacks are deleted before `resolve/reject` in `eel.js`.                                |
+| #697 | Increase initialisation speed by optionally excluding files to scan | Direct response to `eel.init()` slowness on large frontend bundles.                          | In progress in the fork via `exclude_paths` support for init-time JS scanning.                                                             |
+| #612 | Run Edge in app mode                                                | Small, local feature improvement in `eel/edge.py`.                                           | Already effectively present in the current fork.                                                                                           |
+| #626 | Edge Build with `--noconsole` Crash Fix                             | Potentially valuable packaging/runtime fix with narrow scope.                                | In progress in the fork via safer Edge subprocess stream handling.                                                                         |
 
 ### Medium Priority
 
-| PR | Title | Why it matters for Eel-reloaded | Notes |
-| --- | --- | --- | --- |
+| PR   | Title                                      | Why it matters for Eel-reloaded                              | Notes                                                                              |
+| ---- | ------------------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | #681 | Make Eel work with Microsoft Edge on Linux | Useful platform support extension with limited surface area. | In progress in the fork via direct Linux executable discovery with `shutil.which`. |
-| #756 | Pass Arguments to jinja Template | Useful feature for Jinja users. | Implemented in the fork via `eel.get_context()` and template context injection. |
-| #687 | Add websocket reconnect functionality | May improve resilience after backend restarts. | High behavioral risk because the fork already changed websocket failure handling. |
+| #756 | Pass Arguments to jinja Template           | Useful feature for Jinja users.                              | Implemented in the fork via `eel.get_context()` and template context injection.    |
+| #687 | Add websocket reconnect functionality      | May improve resilience after backend restarts.               | High behavioral risk because the fork already changed websocket failure handling.  |
 
 ### Low Priority / Likely Skip For Now
 
-| PR | Title | Notes |
-| --- | --- | --- |
-| #671 | Add Vite React Example | Example-only value, low runtime impact. |
-| #743 | Add archival notice | Not relevant for the maintained fork. |
-| #387 / #373 / #261 / #328 / #338 / #368 | Older PRs | Likely too tied to the legacy architecture or too stale to port directly. |
+| PR                                      | Title                  | Notes                                                                     |
+| --------------------------------------- | ---------------------- | ------------------------------------------------------------------------- |
+| #671                                    | Add Vite React Example | Example-only value, low runtime impact.                                   |
+| #743                                    | Add archival notice    | Not relevant for the maintained fork.                                     |
+| #387 / #373 / #261 / #328 / #338 / #368 | Older PRs              | Likely too tied to the legacy architecture or too stale to port directly. |
 
 ## Issues To Track Alongside The PRs
 
 ### High Priority
 
-| Issue | Title | Why it matters for Eel-reloaded | Related PR |
-| --- | --- | --- | --- |
-| #757 | Memory leak: allocated data got in JS from Python is never freed | Real bug with clear repro; matches current JS bridge area. | #760, #761 |
-| #689 | `init` function is considerable slowness | Important for users shipping large SPA bundles. | #697 |
-| #650 | Cannot read properties of undefined (reading `send`) | Historically important websocket startup/failure issue. | Current fork already guards JS sends behind `WebSocket.OPEN` and rejects failed calls instead of throwing on undefined send. |
-| #561 | Browser pops up before server is properly initialized | Classic startup race. | Implemented in the fork by launching the browser only after server readiness. |
-| #692 | `shutdown_delay` doesn't work | Relevant because shutdown semantics changed in the fork. | Implemented in the fork by scheduling shutdown even when `close_callback` is present. |
+| Issue | Title                                                            | Why it matters for Eel-reloaded                            | Related PR                                                                                                                   |
+| ----- | ---------------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| #751  | Error in `eel.show` with specified coordinates and dimensions    | Clear, local API gap with low implementation risk.         | Implemented in the fork by allowing `eel.show(..., size=..., position=...)` to update per-page geometry before opening.     |
+| #757  | Memory leak: allocated data got in JS from Python is never freed | Real bug with clear repro; matches current JS bridge area. | #760, #761                                                                                                                   |
+| #689  | `init` function is considerable slowness                         | Important for users shipping large SPA bundles.            | #697                                                                                                                         |
+| #650  | Cannot read properties of undefined (reading `send`)             | Historically important websocket startup/failure issue.    | Current fork already guards JS sends behind `WebSocket.OPEN` and rejects failed calls instead of throwing on undefined send. |
+| #561  | Browser pops up before server is properly initialized            | Classic startup race.                                      | Implemented in the fork by launching the browser only after server readiness.                                                |
+| #692  | `shutdown_delay` doesn't work                                    | Relevant because shutdown semantics changed in the fork.   | Implemented in the fork by scheduling shutdown even when `close_callback` is present.                                        |
 
 ### Medium Priority
 
-| Issue | Title | Why it matters for Eel-reloaded | Related PR |
-| --- | --- | --- | --- |
-| #690 | Icon issue | Likely at least partially addressed by the new fallback favicon behavior. | Re-tested in the fork with fallback favicon handler coverage. |
-| #718 | Edge Chromium App mode | Good UX improvement on Windows. | #612 |
-| #703 | Eel with threading doesn't recognize exposed functions | Still worth validating on the fork because threading behavior changed with the ASGI migration. | None yet |
-| #702 | Eel sometimes takes infinitely long to render a webpage | Startup/render stability issue; may overlap with websocket readiness changes. | Possibly adjacent to #687 |
-| #674 | Eel unable to parse arrow functions after `npm run build` | Still relevant for modern frontend workflows. | Re-tested in the fork: explicit alias forms like `window.eel.expose(func, 'name')` remain discoverable by the current parser. |
-| #732 | Javascript function in React doesn't work after build in Prod | Likely related to static JS scanning and build output shape. | Re-tested in the fork: explicit alias forms used by the CRA example remain discoverable by the current parser and documented in the example README. |
+| Issue | Title                                                         | Why it matters for Eel-reloaded                                                                | Related PR                                                                                                                                          |
+| ----- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #690  | Icon issue                                                    | Likely at least partially addressed by the new fallback favicon behavior.                      | Re-tested in the fork with fallback favicon handler coverage.                                                                                       |
+| #739  | `--noconsole` / window-based build crash                      | Important packaging/runtime class of bug, but the upstream traceback targets the legacy Bottle path. | The current fork no longer imports Bottle at runtime and already hardens Edge subprocess streams when stdout/stderr are missing.              |
+| #718  | Edge Chromium App mode                                        | Good UX improvement on Windows.                                                                | #612                                                                                                                                                |
+| #703  | Eel with threading doesn't recognize exposed functions        | Still worth validating on the fork because threading behavior changed with the ASGI migration. | None yet                                                                                                                                            |
+| #702  | Eel sometimes takes infinitely long to render a webpage       | Startup/render stability issue; may overlap with websocket readiness changes.                  | Possibly adjacent to #687                                                                                                                           |
+| #717  | Returning bytestring from Python to JS returns null           | Real interoperability gap, but fixing it cleanly needs an explicit serialization contract.    | None yet                                                                                                                                            |
+| #674  | Eel unable to parse arrow functions after `npm run build`     | Still relevant for modern frontend workflows.                                                  | Re-tested in the fork: explicit alias forms like `window.eel.expose(func, 'name')` remain discoverable by the current parser.                       |
+| #732  | Javascript function in React doesn't work after build in Prod | Likely related to static JS scanning and build output shape.                                   | Re-tested in the fork: explicit alias forms used by the CRA example remain discoverable by the current parser and documented in the example README. |
 
 ### Lower Priority / Reassess Later
 
-| Issue | Title | Notes |
-| --- | --- | --- |
-| #751 | Error in `eel.show` with specified coordinates and dimensions | Likely API gap/bug, but not as urgent as memory or startup behavior. |
-| #753 | `eel.expose()` does not work with a dynamic js function name | Could require analyzer changes; lower short-term value. |
-| #536 | Invalid frame header under heavy websocket load | Important, but may need dedicated repro and may not match the new runtime failure mode exactly. |
-| #610 | Program still running after user closes the window | Re-test first, because shutdown handling has already changed in the fork. Likely only addressable at the server loop level, not arbitrary user threads. |
+| Issue | Title                                                         | Notes                                                                                                                                                   |
+| ----- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| #753  | `eel.expose()` does not work with a dynamic js function name  | Could require analyzer changes; lower short-term value.                                                                                                 |
+| #536  | Invalid frame header under heavy websocket load               | Important, but may need dedicated repro and may not match the new runtime failure mode exactly.                                                         |
+| #610  | Program still running after user closes the window            | Re-test first, because shutdown handling has already changed in the fork. Likely only addressable at the server loop level, not arbitrary user threads. |
+
+## Recently Reviewed Closed / Stale PRs
+
+| PR   | Title                                             | Fork decision |
+| ---- | ------------------------------------------------- | ------------- |
+| #740 | Update `__init__.py` (Performance boost for first boot) | Do not port. It was explicitly closed upstream because it reintroduced the minified-build breakage that Eel had intentionally fixed. |
+| #635 | `get_real_path()` fix for `cx-freeze`             | Reassess later. The idea may still be useful if we want first-class `cx-freeze` docs/support, but it was closed for missing docs/tests rather than because the core change was invalid. |
+| #721 | Update `edge.py`                                  | Effectively superseded for the fork. It was closed upstream without context, and the fork has already ported the clearly valuable Edge fixes with tests. |
+| #745 | Typing improvements                               | Low priority here. Mostly typing cleanup in upstream's legacy codebase; the fork already has its own typed surface and different runtime internals. |
+| #542 | Fixing memory leak that leaves values and callbacks in memory indefinitely | Partially covered. Its callback/result retention fix is directionally important and overlaps with the current JS bridge work, but upstream issue `#536` still appears to have at least one unresolved failure mode even for users who tried that PR. |
+| #504 | Add global function in Jinja env                  | No need to port directly. The fork now has `eel.get_context()` and template context injection, which solves the core Jinja data-passing gap in a cleaner way. |
+
+## Open Issues / PRs Not Worth Porting As-Is
+
+| Item | Reason |
+| ---- | ------ |
+| #763 | Upstream install issue is tied to the old project name. In this fork the extra is already exposed via `eel-reloaded[jinja2]` in `pyproject.toml`. |
+| #739 | The reported traceback goes through upstream's Bottle-based startup path, which this fork no longer uses. |
+| #743 | Archival notice for upstream; irrelevant for the maintained fork. |
 
 ## Recommended Implementation Order
 
-1. Leave PR `#687` until the websocket lifecycle is more settled.
-2. Re-test or prioritize any remaining open upstream issues that still look live after the current fork changes.
+1. Commit the implemented `#751` `eel.show(..., size=..., position=...)` support.
+2. Re-test `#703` on the fork with a minimal threaded repro, because its symptoms may have changed after the ASGI migration.
+3. Decide whether `#717` should gain an explicit bytes serialization policy or remain documented as unsupported return data.
+4. Leave PR `#687` until the websocket lifecycle is more settled.
+5. Re-test or prioritize any remaining open upstream issues that still look live after the current fork changes.
 
 ## Cleanup Reminder
 

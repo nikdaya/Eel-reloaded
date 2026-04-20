@@ -11,8 +11,8 @@ import asyncio
 import threading
 import concurrent.futures
 from contextlib import asynccontextmanager
-from typing import Any, Callable, Literal
-from eel.types import OptionsDictT, StartPageT, WebSocketT
+from typing import Any, Callable, Literal, cast
+from eel.types import GeometryRectT, OptionsDictT, StartPageT, WebSocketT
 import random as rnd
 import importlib.resources as importlib_resources
 import uvicorn
@@ -440,7 +440,11 @@ def start(
         server_thread.join()
 
 
-def show(*start_urls: str) -> None:
+def show(
+    *start_urls: StartPageT,
+    size: tuple[int, int] | None = None,
+    position: tuple[int, int] | None = None,
+) -> None:
     """Show the specified URL(s) in the browser.
 
     Suppose you have two files in your :file:`web` folder. The file
@@ -471,8 +475,39 @@ def show(*start_urls: str) -> None:
     terminates.
 
     :param start_urls: One or more URLs to be opened.
+    :param size: Tuple specifying the (width, height) of each opened Eel page.
+        Stored in the per-page geometry map so the page can resize itself once
+        :file:`eel.js` loads.
+    :param position: Tuple specifying the (left, top) position of each opened
+        Eel page. Stored in the per-page geometry map so the page can move
+        itself once :file:`eel.js` loads.
     """
+    if size is not None or position is not None:
+        geometry = _start_args.setdefault("geometry", {})
+        for page in start_urls:
+            page_path = _get_geometry_page_path(page)
+            if page_path is None:
+                continue
+
+            current_geometry = dict(geometry.get(page_path, {}))
+            if size is not None:
+                current_geometry["size"] = size
+            if position is not None:
+                current_geometry["position"] = position
+            geometry[page_path] = cast(GeometryRectT, current_geometry)
+
     brw.open(list(start_urls), _start_args)
+
+
+def _get_geometry_page_path(page: StartPageT) -> str | None:
+    if isinstance(page, str):
+        return page
+
+    path = page.get("path")
+    if isinstance(path, str):
+        return path
+
+    return None
 
 
 def sleep(seconds: Union[int, float]) -> None:

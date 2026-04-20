@@ -119,6 +119,45 @@ def test_start_waits_for_server_before_show(monkeypatch):
     assert order == ["run", "show"]
 
 
+def test_show_stores_geometry_for_string_pages(monkeypatch):
+    opened = {}
+    eel._start_args["geometry"] = {}
+
+    monkeypatch.setattr(
+        eel.brw,
+        "open",
+        lambda start_pages, options: opened.update(
+            {"start_pages": start_pages, "options": options.copy()}
+        ),
+    )
+
+    eel.show("slider.html", size=(400, 200), position=(40, 40))
+
+    assert opened["start_pages"] == ["slider.html"]
+    assert eel._start_args["geometry"]["slider.html"] == {
+        "size": (400, 200),
+        "position": (40, 40),
+    }
+
+
+def test_show_stores_geometry_for_dict_pages(monkeypatch):
+    opened = {}
+    eel._start_args["geometry"] = {}
+
+    monkeypatch.setattr(
+        eel.brw,
+        "open",
+        lambda start_pages, options: opened.update(
+            {"start_pages": start_pages, "options": options.copy()}
+        ),
+    )
+
+    eel.show({"path": "slider.html", "port": 9000}, size=(500, 300))
+
+    assert opened["start_pages"] == [{"path": "slider.html", "port": 9000}]
+    assert eel._start_args["geometry"]["slider.html"] == {"size": (500, 300)}
+
+
 def test_websocket_close_with_callback_still_schedules_shutdown(monkeypatch):
     scheduled = {}
     callback = mock.Mock()
