@@ -8,7 +8,7 @@ Delete this file after the upstream items below have been either implemented in 
 
 | PR | Title | Why it matters for Eel-reloaded | Notes |
 | --- | --- | --- | --- |
-| #761 | Fix JS memory leak + modernize `eel.js` | Strong candidate for the current JS bridge; touches only `eel/__init__.py` and `eel/eel.js`. | Compare carefully against local JS bridge changes already added in `eel-reloaded`. |
+| #761 | Fix JS memory leak + modernize `eel.js` | Strong candidate for the current JS bridge; touches only `eel/__init__.py` and `eel/eel.js`. | Reviewed in the fork: the leak fix is already covered, while the remaining ES6 refactor is too invasive to port without a separate payoff. |
 | #760 | Fixes #757 | Minimal fix for the JS-side callback retention leak. | Already effectively covered in the current fork: callbacks are deleted before `resolve/reject` in `eel.js`. |
 | #697 | Increase initialisation speed by optionally excluding files to scan | Direct response to `eel.init()` slowness on large frontend bundles. | In progress in the fork via `exclude_paths` support for init-time JS scanning. |
 | #612 | Run Edge in app mode | Small, local feature improvement in `eel/edge.py`. | Already effectively present in the current fork. |
@@ -50,8 +50,8 @@ Delete this file after the upstream items below have been either implemented in 
 | #718 | Edge Chromium App mode | Good UX improvement on Windows. | #612 |
 | #703 | Eel with threading doesn't recognize exposed functions | Still worth validating on the fork because threading behavior changed with the ASGI migration. | None yet |
 | #702 | Eel sometimes takes infinitely long to render a webpage | Startup/render stability issue; may overlap with websocket readiness changes. | Possibly adjacent to #687 |
-| #674 | Eel unable to parse arrow functions after `npm run build` | Still relevant for modern frontend workflows. | None yet |
-| #732 | Javascript function in React doesn't work after build in Prod | Likely related to static JS scanning and build output shape. | Possibly adjacent to #697 and existing CRA docs |
+| #674 | Eel unable to parse arrow functions after `npm run build` | Still relevant for modern frontend workflows. | Re-tested in the fork: explicit alias forms like `window.eel.expose(func, 'name')` remain discoverable by the current parser. |
+| #732 | Javascript function in React doesn't work after build in Prod | Likely related to static JS scanning and build output shape. | Re-tested in the fork: explicit alias forms used by the CRA example remain discoverable by the current parser and documented in the example README. |
 
 ### Lower Priority / Reassess Later
 
@@ -64,10 +64,8 @@ Delete this file after the upstream items below have been either implemented in 
 
 ## Recommended Implementation Order
 
-1. Finish and validate PR `#756`-style Jinja template context support.
-2. Re-test React/build issues `#674` and `#732` against the current fork.
-3. Revisit PR `#761` only for non-invasive improvements that still add value beyond the already-ported leak fix.
-4. Leave PR `#687` until the websocket lifecycle is more settled.
+1. Leave PR `#687` until the websocket lifecycle is more settled.
+2. Re-test or prioritize any remaining open upstream issues that still look live after the current fork changes.
 
 ## Cleanup Reminder
 

@@ -26,6 +26,14 @@ INIT_DIR = TEST_DATA_DIR / "init_test"
         ((INIT_DIR / "sample.html").read_text(), ["say_hello_js"]),
         ((INIT_DIR / "App.tsx").read_text(), ["say_hello_js", "show_log"]),
         ((INIT_DIR / "hello.html").read_text(), ["say_hello_js", "js_random"]),
+        (
+            "const funcName = (funcParam) => { console.log(funcParam); }; window.eel.expose(funcName, 'funcName');",
+            ["funcName"],
+        ),
+        (
+            "const a=(b)=>b;window.eel.expose(a,'getEmailsPortal');",
+            ["getEmailsPortal"],
+        ),
     ],
 )
 def test_exposed_js_functions(js_code, expected_matches):
@@ -82,6 +90,12 @@ def test_jinja_template_render_uses_context_values(monkeypatch):
     assert response.media_type == "text/html"
     assert rendered["title"] == "Hello from Eel!"
     assert rendered["users"] == ["Alice", "Bob", "Charlie"]
+
+
+def test_react_build_style_expose_aliases_remain_discoverable():
+    js_code = "window.eel.expose(minifiedSymbol,'getEmailsPortal')"
+
+    assert eel._find_exposed_js_functions(js_code) == ["getEmailsPortal"]
 
 
 def test_start_waits_for_server_before_show(monkeypatch):
