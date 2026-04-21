@@ -5,6 +5,7 @@
 
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+![Maintained](https://img.shields.io/badge/maintenance-active-brightgreen?style=for-the-badge)
 
 Eel-reloaded is a little Python library for making simple Electron-like offline HTML/JS GUI apps, with full access to Python capabilities and libraries.
 
@@ -18,6 +19,7 @@ Eel-reloaded is designed to take the hassle out of writing short and simple GUI 
 
 - [Eel-reloaded](#eel-reloaded)
   - [What's new in Eel-reloaded](#whats-new-in-eel-reloaded)
+  - [Support The Project](#support-the-project)
   - [Intro](#intro)
   - [Install](#install)
   - [Usage](#usage)
@@ -70,6 +72,20 @@ Eel-reloaded is an actively maintained fork of the now-archived [python-eel/Eel]
 | Resource loading | `pkg_resources` | **`importlib.resources`** (stdlib) |
 | Default favicon | none | **bundled SVG icon, configurable via `icon=`** |
 | Maintenance status | archived | **actively maintained ✓** |
+
+## Support The Project
+
+If Eel-reloaded is useful in your work, sponsorship helps keep maintenance moving: issue triage, compatibility updates, tests, releases, and documentation all take recurring time.
+
+The repository is already configured for GitHub's native funding links through `.github/FUNDING.yml`. Public donation links are intentionally left unset until they point to the actual Eel-reloaded maintainers rather than the archived upstream project.
+
+If you want to support the project now:
+
+- open an issue proposing the funding platform you would use most (`GitHub Sponsors`, `Ko-fi`, `Open Collective`, `Patreon`)
+- mention whether your company would consider recurring sponsorship for maintenance
+- reach out before funding is enabled if you want to sponsor a specific fix, feature, or release cadence
+
+Once maintainer accounts are finalized, the GitHub `Sponsor` button can be enabled without further README restructuring.
 
 ## Install
 
