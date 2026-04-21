@@ -17,6 +17,7 @@ Eel-reloaded is designed to take the hassle out of writing short and simple GUI 
 <!-- TOC -->
 
 - [Eel-reloaded](#eel-reloaded)
+  - [What's new in Eel-reloaded](#whats-new-in-eel-reloaded)
   - [Intro](#intro)
   - [Install](#install)
   - [Usage](#usage)
@@ -31,6 +32,7 @@ Eel-reloaded is designed to take the hassle out of writing short and simple GUI 
   - [Asynchronous Python](#asynchronous-python)
   - [Building distributable binary with PyInstaller](#building-distributable-binary-with-pyinstaller)
   - [Microsoft Edge](#microsoft-edge)
+  - [Contributing](#contributing)
 
 <!-- /TOC -->
 
@@ -47,6 +49,27 @@ For some reason many of the best-in-class number crunching and maths libraries a
 This fork aims to preserve the original ergonomics while replacing the legacy Bottle/Gevent runtime with Starlette, Uvicorn, and `asyncio`.
 
 Source code for this fork lives at [nikdaya/Eel-reloaded](https://github.com/nikdaya/Eel-reloaded).
+
+## What's new in Eel-reloaded
+
+Eel-reloaded is an actively maintained fork of the now-archived [python-eel/Eel](https://github.com/python-eel/Eel) project. The table below summarises the key differences:
+
+| Feature | Original Eel | Eel-reloaded |
+|---|---|---|
+| Web server runtime | Bottle + Gevent | **Starlette + Uvicorn (ASGI / asyncio)** |
+| Python version | 3.6+ | **3.12+** |
+| `bytes` / `bytearray` return values | silently `null` in JS | **serialised to `list[int]` (lossless)** |
+| Concurrent WebSocket sends | potential race condition | **per-socket `asyncio.Lock`** |
+| JS proxy calls from background threads | may deadlock | **thread-safe, queued before connect** |
+| Jinja2 template context | not supported | **`context=` kwarg on `jinja_templates`** |
+| Window geometry | `size` + `position` only | **full `geometry` dict per page** |
+| `eel.ready()` on JS side | not available | **Promise resolving when WS is usable** |
+| Pending JS calls on timeout | hang forever | **rejected with a clear error** |
+| Init scan exclusions | not available | **`exclude_paths=` in `eel.init()`** |
+| Custom HTTP routes | not available | **`extra_routes=` in `eel.start()`** |
+| Resource loading | `pkg_resources` | **`importlib.resources`** (stdlib) |
+| Default favicon | none | **bundled SVG icon, configurable via `icon=`** |
+| Maintenance status | archived | **actively maintained ✓** |
 
 ## Install
 
@@ -359,3 +382,35 @@ For Windows 10 users, Microsoft Edge (`eel.start(.., mode='edge')`) is installed
 
 - A Hello World example using Microsoft Edge: [examples/01 - hello_world-Edge/](examples/01%20-%20hello_world-Edge)
 - Example implementing browser-fallbacks: [examples/07 - CreateReactApp/eel_CRA.py](examples/07%20-%20CreateReactApp/eel_CRA.py)
+
+## Contributing
+
+Contributions of all kinds are welcome — bug fixes, new features, tests, documentation improvements, and new examples.
+
+### Getting started
+
+```shell
+git clone https://github.com/nikdaya/Eel-reloaded.git
+cd Eel-reloaded
+pip install -e ".[jinja2]"
+pip install -r requirements-test.txt
+pytest tests/unit/          # fast, no browser required
+```
+
+The integration tests in `tests/integration/` require a local Chrome/Chromium install and run the real browser. Use `tox` to run the full test matrix.
+
+### Areas actively looking for help
+
+- **Browser tests**: integration tests for Edge, Firefox (via `mode='custom'`), and Electron are sparse. More coverage is welcome.
+- **WebSocket stress tests**: the per-socket send-lock mitigates concurrent-send races but a proper load-testing harness would help validate the fix under real traffic.
+- **Typing**: `eel/types.py` has partial type annotations; improving coverage helps IDEs and mypy.
+- **Examples**: additional examples showing React (Vite), Vue, or Svelte frontends.
+- **Upstream issue triage**: many open issues in the original repo have not been evaluated for relevance in this ASGI-based fork. Checking them and noting which are fixed, obsolete, or still applicable is a big help.
+
+### Code conventions
+
+- Format with `black` (line length 99, configured in `pyproject.toml`).
+- Tests live in `tests/unit/` (pytest, no browser) and `tests/integration/` (Selenium).
+- Commits follow conventional commits (`fix:`, `feat:`, `test:`, `style:`, `docs:`).
+
+Please open an issue before starting large changes so we can coordinate.
