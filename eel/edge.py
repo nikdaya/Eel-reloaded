@@ -26,7 +26,9 @@ def run(_path: str, options: OptionsDictT, start_urls: list[str]) -> None:
             cmd = "start msedge --app={} ".format(start_urls[0])
             cmd = cmd + (" ".join(args))
         else:
-            cmd = "start msedge --new-window " + (" ".join(args)) + " " + (start_urls[0])
+            cmd = (
+                "start msedge --new-window " + (" ".join(args)) + " " + (start_urls[0])
+            )
         sps.Popen(cmd, stdout=stdout, stderr=stderr, stdin=sps.PIPE, shell=True)
     elif options["app_mode"]:
         sps.Popen(

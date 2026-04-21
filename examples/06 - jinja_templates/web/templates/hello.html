@@ -1,33 +1,33 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
 {% block title %}Hello, World!{% endblock %}
-{% block head_scripts %}        
-    eel.expose(say_hello_js);               // Expose this function to Python
-        function say_hello_js(x) {
-        console.log("Hello from " + x);
-    }
+{% block head_scripts %}
+eel.expose(say_hello_js); // Expose this function to Python
+function say_hello_js(x) {
+console.log("Hello from " + x);
+}
 
-    eel.expose(js_random);
-    function js_random() {
-        return Math.random();
-    }
+eel.expose(js_random);
+function js_random() {
+return Math.random();
+}
 
-    function print_num(n) {
-        console.log('Got this from Python: ' + n);
-    }
+function print_num(n) {
+console.log('Got this from Python: ' + n);
+}
 
-    eel.py_random()(print_num);
-        
-    say_hello_js("Javascript World!");
-    eel.say_hello_py("Javascript World!");  // Call a Python function
+eel.py_random()(print_num);
+
+say_hello_js("Javascript World!");
+eel.say_hello_py("Javascript World!"); // Call a Python function
 {% endblock %}
 {% block content %}
-    <h1>{{ title }}</h1>
-    <h2>Users:</h2>
-    <ul>
+<h1>{{ title }}</h1>
+<h2>Users:</h2>
+<ul>
     {% for user in users %}
-        <li>{{ user }}</li>
+    <li>{{ user }}</li>
     {% endfor %}
-    </ul>
-    <br />
-    <a href="page2.html">Page 2</a>
+</ul>
+<br />
+<a href="page2.html">Page 2</a>
 {% endblock %}
