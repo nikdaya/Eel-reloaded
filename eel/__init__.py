@@ -35,6 +35,7 @@ with importlib_resources.as_file(_eel_icon_reference) as _eel_icon_path:
     _eel_icon: str = _eel_icon_path.read_text(encoding="utf-8")
 
 _websockets: list[tuple[Any, WebSocket]] = []
+_websocket_send_locks: dict[int, asyncio.Lock] = {}
 _call_return_values: dict[Any, Any] = {}
 _call_return_callbacks: dict[
     float, tuple[Callable[..., Any], Callable[..., Any] | None]
@@ -675,6 +676,7 @@ def _get_icon_href() -> str | None:
 async def _websocket_handler(websocket: WebSocket) -> None:
     global _websockets
     await websocket.accept()
+    _websocket_send_locks.setdefault(id(websocket), asyncio.Lock())
 
     for js_function in _js_functions:
         _import_js_function(js_function)
@@ -698,23 +700,22 @@ async def _websocket_handler(websocket: WebSocket) -> None:
     finally:
         if (page, websocket) in _websockets:
             _websockets.remove((page, websocket))
+        _websocket_send_locks.pop(id(websocket), None)
         _websocket_close(page)
 
 
 # Private functions
 
 
-def _safe_json(obj: Any) -> str:
-    return jsn.dumps(obj, default=lambda o: None)
-
-
 async def _send(ws: WebSocket, msg: str) -> None:
-    for _ in range(100):
-        try:
-            await ws.send_text(msg)
-            return
-        except Exception:
-            await asyncio.sleep(0.001)
+    lock = _websocket_send_locks.setdefault(id(ws), asyncio.Lock())
+    async with lock:
+        for _ in range(100):
+            try:
+                await ws.send_text(msg)
+                return
+            except Exception:
+                await asyncio.sleep(0.001)
 
 
 async def _process_message(message: dict[str, Any], ws: WebSocket) -> None:
@@ -761,6 +762,16 @@ async def _process_message(message: dict[str, Any], ws: WebSocket) -> None:
                 error_callback(message["error"], message["stack"])
     else:
         print("Invalid message received: ", message)
+
+
+def _safe_json_default(obj: Any) -> Any:
+    if isinstance(obj, (bytes, bytearray, memoryview)):
+        return list(bytes(obj))
+    return None
+
+
+def _safe_json(obj: Any) -> str:
+    return jsn.dumps(obj, default=_safe_json_default)
 
 
 def _get_real_path(path: str) -> str:

@@ -1,4 +1,6 @@
 import asyncio
+import json
+import threading
 from pathlib import Path
 from unittest import mock
 
@@ -96,6 +98,67 @@ def test_react_build_style_expose_aliases_remain_discoverable():
     js_code = "window.eel.expose(minifiedSymbol,'getEmailsPortal')"
 
     assert eel._find_exposed_js_functions(js_code) == ["getEmailsPortal"]
+
+
+def test_unknown_js_function_can_be_called_from_thread_before_connect(monkeypatch):
+    monkeypatch.setattr(eel, "_mock_queue", [])
+
+    worker = threading.Thread(target=eel.reload)
+    worker.start()
+    worker.join()
+
+    assert eel._mock_queue[-1]["name"] == "reload"
+
+
+def test_process_message_serializes_bytes_return_values(monkeypatch):
+    sent = []
+
+    @eel.expose
+    def bytes_payload():
+        return b"hello"
+
+    async def capture_send(_ws, msg):
+        sent.append(json.loads(msg))
+
+    monkeypatch.setattr(eel, "_send", capture_send)
+
+    asyncio.run(
+        eel._process_message(
+            {"call": 1, "name": "bytes_payload", "args": []},
+            mock.Mock(),
+        )
+    )
+
+    assert sent == [
+        {"return": 1, "status": "ok", "value": [104, 101, 108, 108, 111], "error": {}}
+    ]
+
+
+def test_broadcast_serializes_send_per_websocket(monkeypatch):
+    class FakeWebSocket:
+        def __init__(self):
+            self.inflight = 0
+            self.max_inflight = 0
+            self.messages = []
+
+        async def send_text(self, msg):
+            self.inflight += 1
+            self.max_inflight = max(self.max_inflight, self.inflight)
+            await asyncio.sleep(0)
+            self.messages.append(msg)
+            self.inflight -= 1
+
+    websocket = FakeWebSocket()
+    monkeypatch.setattr(eel, "_websockets", [("index.html", websocket)])
+    monkeypatch.setattr(eel, "_websocket_send_locks", {})
+
+    async def main():
+        await asyncio.gather(*(eel._broadcast(f"message-{index}") for index in range(10)))
+
+    asyncio.run(main())
+
+    assert websocket.max_inflight == 1
+    assert len(websocket.messages) == 10
 
 
 def test_start_waits_for_server_before_show(monkeypatch):
