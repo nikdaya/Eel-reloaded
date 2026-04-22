@@ -97,15 +97,13 @@ React example with Python and browser console interaction:
 
 ## Intro
 
-There are several options for making GUI apps in Python, but if you want to use HTML/JS (in order to use jQueryUI or Bootstrap, for example) then you generally have to write a lot of boilerplate code to communicate from the Client (Javascript) side to the Server (Python) side.
+Python has many GUI options, but when your UI is web-based you often end up writing unnecessary plumbing between browser code and backend logic. Eel-reloaded is designed to remove most of that boilerplate.
 
-The closest Python equivalent to Electron (to my knowledge) is [cefpython](https://github.com/cztomczak/cefpython). It is a bit heavy weight for what I wanted.
+The project keeps the simple Eel programming model while modernizing the runtime. You write frontend code with standard HTML/CSS/JavaScript, expose Python functions with decorators, and call both sides over a lightweight local bridge.
 
-Eel-reloaded is not as fully-fledged as Electron or cefpython - it is probably not suitable for making full blown applications like Atom - but it is very suitable for making the GUI equivalent of little utility scripts that you use internally in your team.
+Compared to heavier desktop stacks, Eel-reloaded is intentionally focused on small and medium desktop-style applications: internal tools, operator consoles, data entry apps, automation dashboards, and utility frontends for existing Python code.
 
-For some reason many of the best-in-class number crunching and maths libraries are in Python (Tensorflow, Numpy, Scipy etc) but many of the best visualization libraries are in Javascript (D3, THREE.js etc). Hopefully Eel-reloaded makes it easy to combine these into simple utility apps for assisting your development.
-
-This fork aims to preserve the original ergonomics while replacing the legacy Bottle/Gevent runtime with Starlette, Uvicorn, and `asyncio`.
+This fork preserves the original ergonomics while replacing the legacy Bottle/Gevent stack with Starlette, Uvicorn, and `asyncio`, and by actively maintaining compatibility fixes and quality-of-life improvements.
 
 Source code for this fork lives at [nikdaya/Eel-reloaded](https://github.com/nikdaya/Eel-reloaded).
 
