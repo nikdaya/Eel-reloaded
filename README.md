@@ -7,17 +7,18 @@
 ![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
 ![Maintained](https://img.shields.io/badge/maintenance-active-brightgreen?style=for-the-badge)
 
-Eel-reloaded is a little Python library for making simple Electron-like offline HTML/JS GUI apps, with full access to Python capabilities and libraries.
+Eel-reloaded is a small Python library for building desktop-style HTML/JS apps with full access to Python code and packages.
 
 > **Eel-reloaded hosts a local webserver, then lets you annotate functions in Python so that they can be called from Javascript, and vice versa.**
 
-Eel-reloaded is designed to take the hassle out of writing short and simple GUI applications. If you are familiar with Python and web development, probably just jump to [this example](examples/04%20-%20file_access) which picks random file names out of the given folder (something that is impossible from a browser).
-
-<p align="center"><img src="examples/04%20-%20file_access/Screenshot.png" ></p>
+If you are already comfortable with Python and web development, jump directly to [examples/04 - file_access](examples/04%20-%20file_access) for a minimal end-to-end app.
 
 <!-- TOC -->
 
 - [Eel-reloaded](#eel-reloaded)
+  - [Quick Start](#quick-start)
+  - [When to use Eel-reloaded](#when-to-use-eel-reloaded)
+  - [Screenshots](#screenshots)
   - [What's new in Eel-reloaded](#whats-new-in-eel-reloaded)
   - [Support The Project](#support-the-project)
   - [Intro](#intro)
@@ -38,6 +39,62 @@ Eel-reloaded is designed to take the hassle out of writing short and simple GUI 
 
 <!-- /TOC -->
 
+## Quick Start
+
+Install and run a first app in under a minute:
+
+```shell
+pip install eel-reloaded
+```
+
+```python
+import eel
+
+eel.init("web")
+eel.start("main.html")
+```
+
+Then add `eel.js` in your page and expose a Python function:
+
+```html
+<script type="text/javascript" src="/eel.js"></script>
+```
+
+```python
+@eel.expose
+def ping(name):
+    return f"Hello {name}!"
+```
+
+```javascript
+await eel.ping("Eel")();
+```
+
+## When to use Eel-reloaded
+
+Eel-reloaded is a good fit when you want:
+
+- a desktop-style app UI built with HTML, CSS and JavaScript
+- direct Python access (filesystem, scripts, existing business logic)
+- faster iteration than Electron-level application scaffolding
+- a lightweight utility app for internal teams or power users
+
+Eel-reloaded is probably not the best fit when you need:
+
+- a heavy multi-window desktop platform with deep native integrations
+- highly locked-down sandboxing requirements
+- full browser-engine bundling guarantees out of the box
+
+## Screenshots
+
+Classic native-style file picker example:
+
+<p align="center"><img src="examples/04%20-%20file_access/Screenshot.png" width="520" alt="File access example screenshot" /></p>
+
+React example with Python and browser console interaction:
+
+<p align="center"><img src="examples/07%20-%20CreateReactApp/Demo.png" width="900" alt="React example screenshot" /></p>
+
 ## Intro
 
 There are several options for making GUI apps in Python, but if you want to use HTML/JS (in order to use jQueryUI or Bootstrap, for example) then you generally have to write a lot of boilerplate code to communicate from the Client (Javascript) side to the Server (Python) side.
@@ -56,22 +113,22 @@ Source code for this fork lives at [nikdaya/Eel-reloaded](https://github.com/nik
 
 Eel-reloaded is an actively maintained fork of the now-archived [python-eel/Eel](https://github.com/python-eel/Eel) project. The table below summarises the key differences:
 
-| Feature | Original Eel | Eel-reloaded |
-|---|---|---|
-| Web server runtime | Bottle + Gevent | **Starlette + Uvicorn (ASGI / asyncio)** |
-| Python version | 3.6+ | **3.12+** |
-| `bytes` / `bytearray` return values | silently `null` in JS | **serialised to `list[int]` (lossless)** |
-| Concurrent WebSocket sends | potential race condition | **per-socket `asyncio.Lock`** |
-| JS proxy calls from background threads | may deadlock | **thread-safe, queued before connect** |
-| Jinja2 template context | not supported | **`context=` kwarg on `jinja_templates`** |
-| Window geometry | `size` + `position` only | **full `geometry` dict per page** |
-| `eel.ready()` on JS side | not available | **Promise resolving when WS is usable** |
-| Pending JS calls on timeout | hang forever | **rejected with a clear error** |
-| Init scan exclusions | not available | **`exclude_paths=` in `eel.init()`** |
-| Custom HTTP routes | not available | **`extra_routes=` in `eel.start()`** |
-| Resource loading | `pkg_resources` | **`importlib.resources`** (stdlib) |
-| Default favicon | none | **bundled SVG icon, configurable via `icon=`** |
-| Maintenance status | archived | **actively maintained ✓** |
+| Feature                                | Original Eel             | Eel-reloaded                                   |
+| -------------------------------------- | ------------------------ | ---------------------------------------------- |
+| Web server runtime                     | Bottle + Gevent          | **Starlette + Uvicorn (ASGI / asyncio)**       |
+| Python version                         | 3.6+                     | **3.12+**                                      |
+| `bytes` / `bytearray` return values    | silently `null` in JS    | **serialised to `list[int]` (lossless)**       |
+| Concurrent WebSocket sends             | potential race condition | **per-socket `asyncio.Lock`**                  |
+| JS proxy calls from background threads | may deadlock             | **thread-safe, queued before connect**         |
+| Jinja2 template context                | not supported            | **`context=` kwarg on `jinja_templates`**      |
+| Window geometry                        | `size` + `position` only | **full `geometry` dict per page**              |
+| `eel.ready()` on JS side               | not available            | **Promise resolving when WS is usable**        |
+| Pending JS calls on timeout            | hang forever             | **rejected with a clear error**                |
+| Init scan exclusions                   | not available            | **`exclude_paths=` in `eel.init()`**           |
+| Custom HTTP routes                     | not available            | **`extra_routes=` in `eel.start()`**           |
+| Resource loading                       | `pkg_resources`          | **`importlib.resources`** (stdlib)             |
+| Default favicon                        | none                     | **bundled SVG icon, configurable via `icon=`** |
+| Maintenance status                     | archived                 | **actively maintained ✓**                      |
 
 ## Support The Project
 
@@ -401,7 +458,7 @@ For Windows 10 users, Microsoft Edge (`eel.start(.., mode='edge')`) is installed
 
 ## Contributing
 
-Contributions of all kinds are welcome — bug fixes, new features, tests, documentation improvements, and new examples.
+Contributions of all kinds are welcome - bug fixes, new features, tests, documentation improvements, and new examples.
 
 ### Getting started
 
