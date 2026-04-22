@@ -61,3 +61,33 @@ Single environment:
 ```bash
 tox -e py312
 ```
+
+## Release and tagging policy
+
+Use semantic version tags in the form `vMAJOR.MINOR.PATCH` (for example `v0.19.0`).
+
+Versioning rules:
+
+- `MAJOR`: incompatible API changes
+- `MINOR`: backward-compatible features
+- `PATCH`: backward-compatible fixes/docs/packaging updates
+
+Before creating a release tag:
+
+1. Update `version` in `pyproject.toml`.
+2. Add/update the matching heading in `CHANGELOG.md`.
+3. Ensure tests pass (`pytest tests/unit/` and optionally `tox`).
+4. Commit those changes.
+5. Create an annotated tag:
+
+```bash
+git tag -a v0.19.0 -m "Release v0.19.0"
+git push origin main
+git push origin v0.19.0
+```
+
+Backfilling old tags:
+
+- If a historical release exists in the changelog but no tag exists, create the tag at the commit that introduced that release version metadata.
+- Prefer annotated tags (`git tag -a`) over lightweight tags.
+- Do not reuse/move a published tag.

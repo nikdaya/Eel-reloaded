@@ -35,6 +35,7 @@ If you are already comfortable with Python and web development, jump directly to
   - [Asynchronous Python](#asynchronous-python)
   - [Building distributable binary with PyInstaller](#building-distributable-binary-with-pyinstaller)
   - [Microsoft Edge](#microsoft-edge)
+  - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
 
 <!-- /TOC -->
@@ -210,36 +211,36 @@ eel.start(
 
 #### Server and network
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `host` | `str` | `'localhost'` | Hostname used by the web server. |
-| `port` | `int` | `8000` | Port used by the web server. Use `0` for auto-pick. |
-| `all_interfaces` | `bool` | `False` | Listen on all interfaces instead of localhost only. |
-| `default_path` | `str` | `'index.html'` | File served for `/`. |
-| `disable_cache` | `bool` | `True` | Serve assets with `Cache-Control: no-store`. |
-| `extra_routes` | `list[Route | WebSocketRoute] \| None` | `None` | Extra Starlette routes inserted before Eel's static catch-all route. |
+| Option           | Type        | Default                  | Description                                         |
+| ---------------- | ----------- | ------------------------ | --------------------------------------------------- |
+| `host`           | `str`       | `'localhost'`            | Hostname used by the web server.                    |
+| `port`           | `int`       | `8000`                   | Port used by the web server. Use `0` for auto-pick. |
+| `all_interfaces` | `bool`      | `False`                  | Listen on all interfaces instead of localhost only. |
+| `default_path`   | `str`       | `'index.html'`           | File served for `/`.                                |
+| `disable_cache`  | `bool`      | `True`                   | Serve assets with `Cache-Control: no-store`.        |
+| `extra_routes`   | `list[Route \| WebSocketRoute] \| None` | `None`                    | Extra Starlette routes inserted before Eel's static catch-all route. |
 
 #### Browser and window behavior
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `mode` | `str \| None \| False` | `'chrome'` | Browser backend (`'chrome'`, `'electron'`, `'edge'`, `'msie'`, `'custom'`) or no window when `None/False`. |
-| `app_mode` | `bool` | `True` | Launch Chrome/Edge in app-style window mode. |
-| `cmdline_args` | `list[str]` | `['--disable-http-cache']` | Extra command-line flags for browser startup. |
-| `size` | `tuple[int, int] \| None` | `None` | Main window `(width, height)` in pixels. |
-| `position` | `tuple[int, int] \| None` | `None` | Main window `(left, top)` in pixels. |
-| `geometry` | `dict[str, dict[str, tuple[int, int]]]` | `{}` | Per-page window geometry, e.g. `{'page.html': {'size': (200, 100), 'position': (300, 50)}}`. |
-| `icon` | `str \| None \| False` | `None` | Fallback favicon URL/path (`None` uses bundled icon, `False` disables injection). |
+| Option         | Type                                    | Default                    | Description                                                                                                |
+| -------------- | --------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `mode`         | `str \| None \| False`                  | `'chrome'`                 | Browser backend (`'chrome'`, `'electron'`, `'edge'`, `'msie'`, `'custom'`) or no window when `None/False`. |
+| `app_mode`     | `bool`                                  | `True`                     | Launch Chrome/Edge in app-style window mode.                                                               |
+| `cmdline_args` | `list[str]`                             | `['--disable-http-cache']` | Extra command-line flags for browser startup.                                                              |
+| `size`         | `tuple[int, int] \| None`               | `None`                     | Main window `(width, height)` in pixels.                                                                   |
+| `position`     | `tuple[int, int] \| None`               | `None`                     | Main window `(left, top)` in pixels.                                                                       |
+| `geometry`     | `dict[str, dict[str, tuple[int, int]]]` | `{}`                       | Per-page window geometry, e.g. `{'page.html': {'size': (200, 100), 'position': (300, 50)}}`.               |
+| `icon`         | `str \| None \| False`                  | `None`                     | Fallback favicon URL/path (`None` uses bundled icon, `False` disables injection).                          |
 
 #### Lifecycle and templates
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `block` | `bool` | `True` | Whether `eel.start()` blocks the calling thread. |
-| `jinja_templates` | `str \| None` | `None` | Folder used for Jinja2 templates. |
-| `close_callback` | `Callable \| None` | `None` | Callback called when a websocket/page closes. Receives `(closed_page, remaining_websockets)`. |
-| `shutdown_delay` | `float` | `1.0` | Delay before automatic shutdown check after socket close. |
-| `suppress_error` | `bool` | `False` | Suppress transitional compatibility warning for old API usage. |
+| Option            | Type               | Default | Description                                                                                   |
+| ----------------- | ------------------ | ------- | --------------------------------------------------------------------------------------------- |
+| `block`           | `bool`             | `True`  | Whether `eel.start()` blocks the calling thread.                                              |
+| `jinja_templates` | `str \| None`      | `None`  | Folder used for Jinja2 templates.                                                             |
+| `close_callback`  | `Callable \| None` | `None`  | Callback called when a websocket/page closes. Receives `(closed_page, remaining_websockets)`. |
+| `shutdown_delay`  | `float`            | `1.0`   | Delay before automatic shutdown check after socket close.                                     |
+| `suppress_error`  | `bool`             | `False` | Suppress transitional compatibility warning for old API usage.                                |
 
 
 
@@ -478,6 +479,30 @@ For Windows 10 users, Microsoft Edge (`eel.start(.., mode='edge')`) is installed
 
 - A Hello World example using Microsoft Edge: [examples/01 - hello_world-Edge/](examples/01%20-%20hello_world-Edge)
 - Example implementing browser-fallbacks: [examples/07 - CreateReactApp/eel_CRA.py](examples/07%20-%20CreateReactApp/eel_CRA.py)
+
+## Troubleshooting
+
+Common issues and quick checks:
+
+- `await eel.some_call()()` hangs in JavaScript:
+  Ensure the page includes `/eel.js`, then call `await eel.ready()` before first bridge usage.
+- Python call times out waiting for JavaScript return value:
+  Increase `_js_result_timeout` in `eel.init(...)` when your frontend call is intentionally slow.
+- Exposed JS functions are not found after frontend build/minification:
+  Use explicit alias form, e.g. `window.eel.expose(fn, 'stable_name')`.
+- App exits when you refresh a page during development:
+  Use `shutdown_delay` in `eel.start(...)` to tolerate short websocket reconnect windows.
+- Browser opens but app UI does not load:
+  Verify `eel.init('web_folder')` path and `default_path` / `start` URL names.
+- Edge app mode behavior differs across machines:
+  Test with `mode='edge', app_mode=True` and keep browser flags in `cmdline_args` explicit for reproducibility.
+
+If the issue persists, open an issue with:
+
+- OS and Python version
+- browser and version
+- minimal reproducible snippet (Python + HTML/JS)
+- traceback / console errors
 
 ## Contributing
 
