@@ -31,6 +31,7 @@ import eel.browsers as brw
 
 
 mimetypes.add_type("application/javascript", ".js")
+mimetypes.add_type("application/wasm", ".wasm")
 
 _eel_js_reference = importlib_resources.files("eel") / "eel.js"
 with importlib_resources.as_file(_eel_js_reference) as _eel_js_path:

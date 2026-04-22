@@ -1,5 +1,6 @@
 import asyncio
 import json
+import mimetypes
 import threading
 from pathlib import Path
 from unittest import mock
@@ -397,3 +398,7 @@ def test_eel_js_exposes_connection_failure_apis():
     assert "ready: function" in eel._eel_js
     assert "set_connection_timeout: function" in eel._eel_js
     assert "_handle_connection_failure: function" in eel._eel_js
+
+
+def test_wasm_mimetype_is_registered():
+    assert mimetypes.guess_type("module.wasm")[0] == "application/wasm"

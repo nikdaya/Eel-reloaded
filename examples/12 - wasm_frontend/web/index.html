@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eel + WASM frontend example</title>
+    <script type="text/javascript" src="/eel.js"></script>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #1f2a37;
+        --muted: #6b7280;
+        --accent: #0f766e;
+        --accent-soft: #d1fae5;
+        --border: #e5e7eb;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: radial-gradient(circle at 15% 10%, #ffffff, var(--bg));
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .layout {
+        max-width: 980px;
+        margin: 32px auto;
+        padding: 0 16px;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 12px 30px rgba(17, 24, 39, 0.06);
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 1.7rem;
+      }
+      p {
+        margin: 0 0 10px;
+        color: var(--muted);
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      button {
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      button.secondary {
+        background: #111827;
+      }
+      .badge {
+        display: inline-block;
+        padding: 4px 9px;
+        border-radius: 99px;
+        background: var(--accent-soft);
+        color: var(--accent);
+        font-size: 0.82rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+      }
+      pre {
+        margin-top: 16px;
+        background: #0b1020;
+        color: #d5e2ff;
+        border-radius: 12px;
+        padding: 14px;
+        overflow: auto;
+        min-height: 130px;
+      }
+      @media (max-width: 640px) {
+        .layout {
+          margin-top: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <div class="card">
+        <span class="badge">Frontend WASM in Eel-reloaded</span>
+        <h1>WASM demo + quick benchmark</h1>
+        <p>
+          This page loads <code>/wasm/add.wasm</code>, calls its exported
+          <code>add</code> function, and compares speed with pure JavaScript.
+        </p>
+        <div class="row">
+          <button id="run">Run benchmark</button>
+          <button class="secondary" id="check">Check WASM support</button>
+        </div>
+        <pre id="out">Ready.</pre>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      const out = document.getElementById("out");
+
+      function log(message) {
+        out.textContent += `\n${message}`;
+      }
+
+      function nowMs() {
+        return performance.now();
+      }
+
+      function jsAdd(a, b) {
+        return a + b;
+      }
+
+      async function loadWasmAdd() {
+        const response = await fetch("/wasm/add.wasm");
+        if (!response.ok) {
+          throw new Error(`Cannot load /wasm/add.wasm (HTTP ${response.status})`);
+        }
+        const bytes = await response.arrayBuffer();
+        const { instance } = await WebAssembly.instantiate(bytes, {});
+        if (!instance.exports.add) {
+          throw new Error("WASM module does not export 'add'.");
+        }
+        return instance.exports.add;
+      }
+
+      async function runBenchmark() {
+        out.textContent = "Running benchmark...";
+
+        if (typeof WebAssembly === "undefined") {
+          log("WebAssembly is not supported in this browser.");
+          log("Fallback: continue with JS-only path.");
+          return;
+        }
+
+        const iterations = 4_000_000;
+        const a = 7;
+        const b = 13;
+
+        const wasmAdd = await loadWasmAdd();
+
+        let sink = 0;
+        let t0 = nowMs();
+        for (let i = 0; i < iterations; i++) {
+          sink ^= jsAdd(a, b);
+        }
+        const jsMs = nowMs() - t0;
+
+        t0 = nowMs();
+        for (let i = 0; i < iterations; i++) {
+          sink ^= wasmAdd(a, b);
+        }
+        const wasmMs = nowMs() - t0;
+
+        out.textContent = "Done.";
+        log(`Iterations: ${iterations.toLocaleString()}`);
+        log(`JS add result sample: ${jsAdd(a, b)}`);
+        log(`WASM add result sample: ${wasmAdd(a, b)}`);
+        log(`JS time: ${jsMs.toFixed(2)} ms`);
+        log(`WASM time: ${wasmMs.toFixed(2)} ms`);
+        log(`Ignore sink: ${sink}`);
+      }
+
+      function checkSupport() {
+        out.textContent = "";
+        if (typeof WebAssembly === "undefined") {
+          log("WebAssembly API is not available.");
+          log("Fallback strategy: use JS implementation.");
+          return;
+        }
+        log("WebAssembly API is available.");
+        log("You can run the benchmark now.");
+      }
+
+      document.getElementById("run").addEventListener("click", () => {
+        runBenchmark().catch((err) => {
+          out.textContent = `Error: ${String(err)}`;
+          log("Fallback: keep using JS path.");
+        });
+      });
+
+      document.getElementById("check").addEventListener("click", checkSupport);
+    </script>
+  </body>
+</html>

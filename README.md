@@ -35,6 +35,7 @@ If you are already comfortable with Python and web development, jump directly to
   - [Asynchronous Python](#asynchronous-python)
   - [Building distributable binary with PyInstaller](#building-distributable-binary-with-pyinstaller)
   - [Microsoft Edge](#microsoft-edge)
+  - [Frontend WebAssembly (WASM)](#frontend-webassembly-wasm)
   - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
 
@@ -492,6 +493,25 @@ For Windows 10 users, Microsoft Edge (`eel.start(.., mode='edge')`) is installed
 
 - A Hello World example using Microsoft Edge: [examples/01 - hello_world-Edge/](examples/01%20-%20hello_world-Edge)
 - Example implementing browser-fallbacks: [examples/07 - CreateReactApp/eel_CRA.py](examples/07%20-%20CreateReactApp/eel_CRA.py)
+
+## Frontend WebAssembly (WASM)
+
+Eel-reloaded can run frontend WASM modules directly in the browser UI while keeping Python native on the backend.
+
+Use case:
+
+- CPU-heavy frontend logic where JS performance is a bottleneck
+- deterministic compute modules reused across web and desktop-style apps
+
+Included example:
+
+- [examples/12 - wasm_frontend](examples/12%20-%20wasm_frontend): loads a `.wasm` asset, calls an exported function, runs a simple JS-vs-WASM benchmark, and shows fallback behavior when WASM is unavailable.
+
+Notes:
+
+- `.wasm` assets are served with `application/wasm`.
+- Keep a JS fallback path for unsupported environments or loading failures.
+- If your app moves large binary payloads between Python and JS, consider introducing explicit binary channels (`bytes` -> `Uint8Array`) in a future bridge extension.
 
 ## Troubleshooting
 
