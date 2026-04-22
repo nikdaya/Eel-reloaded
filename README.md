@@ -193,28 +193,53 @@ If you have a large frontend bundle and do not need Python to call JS functions 
 
 ### App options
 
-Additional options can be passed to `eel.start()` as keyword arguments.
+Pass options to `eel.start()` as keyword arguments.
 
-Some of the options include the mode the app is in (e.g. 'chrome'), the port the app runs on, the host name of the app, and adding additional command line flags.
+Example:
 
-The following options are available to `start()`:
- - **mode**, a string specifying what browser to use (e.g. `'chrome'`, `'electron'`, `'edge'`,`'msie'`, `'custom'`). Can also be `None` or `False` to not open a window. *Default: `'chrome'`*
- - **host**, a string specifying what hostname to use for the web server. *Default: `'localhost'`)*
- - **port**, an int specifying what port to use for the web server. Use `0` for port to be picked automatically. *Default: `8000`*.
- - **block**, a bool saying whether or not the call to `start()` should block the calling thread. *Default: `True`*
- - **jinja_templates**, a string specifying a folder to use for Jinja2 templates, e.g. `my_templates`. *Default:  `None`*
- - **cmdline_args**, a list of strings to pass to the command to start the browser. For example, we might add extra flags for Chrome; ```eel.start('main.html', mode='chrome-app', port=8080, cmdline_args=['--start-fullscreen', '--browser-startup-dialog'])```. *Default: `[]`*
- - **size**, a tuple of ints specifying the (width, height) of the main window in pixels *Default: `None`*
- - **position**, a tuple of ints specifying the (left, top) of the main window in pixels *Default: `None`*
- - **geometry**, a dictionary specifying the size and position for all windows. The keys should be the relative path of the page, and the values should be a dictionary of the form `{'size': (200, 100), 'position': (300, 50)}`. *Default: {}*
- - **close_callback**, a lambda or function that is called when a websocket to a window closes (i.e. when the user closes the window). It should take two arguments; a string which is the relative path of the page that just closed, and a list of other websockets that are still open. *Default: `None`*
- - **app_mode**, a bool controlling whether Chrome or Edge should be launched as an app-style window. `mode='chrome-app'` remains supported as shorthand for `mode='chrome', app_mode=True`.
- - **all_interfaces**, a bool controlling whether the web server listens on all interfaces instead of only `localhost`.
- - **disable_cache**, a bool controlling whether static assets are served with `Cache-Control: no-store`. *Default: `True`*
- - **default_path**, the file served for `/`. *Default: `'index.html'`*
- - **icon**, fallback icon injected into served HTML pages when they do not already define a favicon. Pass a web path/URL such as `'/assets/app-icon.svg'`, leave as default for the bundled Eel-reloaded icon, or set `False` to disable injection.
- - **extra_routes**, a list of Starlette `Route` or `WebSocketRoute` objects added before Eel-reloaded's static-file catch-all. Use this to attach custom HTTP endpoints to the same app.
- - **shutdown_delay**, timer configurable for Eel-reloaded's shutdown detection mechanism, whereby when any websocket closes, it waits `shutdown_delay` seconds, and then checks if there are now any websocket connections. If not, then the app shuts down. By default, the value of **shutdown_delay** is `1.0` second
+```python
+eel.start(
+    "main.html",
+    mode="chrome",
+    app_mode=True,
+    port=0,
+    size=(1200, 800),
+    cmdline_args=["--start-fullscreen"],
+)
+```
+
+#### Server and network
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `host` | `str` | `'localhost'` | Hostname used by the web server. |
+| `port` | `int` | `8000` | Port used by the web server. Use `0` for auto-pick. |
+| `all_interfaces` | `bool` | `False` | Listen on all interfaces instead of localhost only. |
+| `default_path` | `str` | `'index.html'` | File served for `/`. |
+| `disable_cache` | `bool` | `True` | Serve assets with `Cache-Control: no-store`. |
+| `extra_routes` | `list[Route | WebSocketRoute] \| None` | `None` | Extra Starlette routes inserted before Eel's static catch-all route. |
+
+#### Browser and window behavior
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `mode` | `str \| None \| False` | `'chrome'` | Browser backend (`'chrome'`, `'electron'`, `'edge'`, `'msie'`, `'custom'`) or no window when `None/False`. |
+| `app_mode` | `bool` | `True` | Launch Chrome/Edge in app-style window mode. |
+| `cmdline_args` | `list[str]` | `['--disable-http-cache']` | Extra command-line flags for browser startup. |
+| `size` | `tuple[int, int] \| None` | `None` | Main window `(width, height)` in pixels. |
+| `position` | `tuple[int, int] \| None` | `None` | Main window `(left, top)` in pixels. |
+| `geometry` | `dict[str, dict[str, tuple[int, int]]]` | `{}` | Per-page window geometry, e.g. `{'page.html': {'size': (200, 100), 'position': (300, 50)}}`. |
+| `icon` | `str \| None \| False` | `None` | Fallback favicon URL/path (`None` uses bundled icon, `False` disables injection). |
+
+#### Lifecycle and templates
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `block` | `bool` | `True` | Whether `eel.start()` blocks the calling thread. |
+| `jinja_templates` | `str \| None` | `None` | Folder used for Jinja2 templates. |
+| `close_callback` | `Callable \| None` | `None` | Callback called when a websocket/page closes. Receives `(closed_page, remaining_websockets)`. |
+| `shutdown_delay` | `float` | `1.0` | Delay before automatic shutdown check after socket close. |
+| `suppress_error` | `bool` | `False` | Suppress transitional compatibility warning for old API usage. |
 
 
 
