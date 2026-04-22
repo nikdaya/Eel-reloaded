@@ -62,6 +62,32 @@ Single environment:
 tox -e py312
 ```
 
+### Verified local runbook (Python 3.12)
+
+If your machine has multiple Python versions, use explicit 3.12 commands to avoid
+accidentally running tests on unsupported interpreters.
+
+Windows (PowerShell):
+
+```bash
+py -3.12 -m pip install --upgrade pip
+py -3.12 -m pip install -e ".[jinja2]"
+py -3.12 -m pip install -r requirements-test.txt
+py -3.12 -m pytest tests/unit -q
+py -3.12 -m pytest tests/integration -q
+```
+
+Alternative explicit interpreter path (Windows):
+
+```bash
+C:/Users/<you>/AppData/Local/Programs/Python/Python312/python.exe -m pytest tests/unit -q
+```
+
+Notes:
+
+- Keep the project installed in editable mode (`-e`) so tests use workspace code.
+- Integration tests require Chrome on the machine.
+
 ## Release and tagging policy
 
 Use semantic version tags in the form `vMAJOR.MINOR.PATCH` (for example `v0.19.0`).

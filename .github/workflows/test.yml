@@ -9,47 +9,62 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  unit-tests:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, windows-latest, macos-latest]
-        python-version: [3.7, 3.8, 3.9, "3.10", "3.11", "3.12"]
-        exclude:
-          - os: macos-latest
-            python-version: 3.7
-          - os: ubuntu-24.04
-            python-version: 3.7
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/checkout@v4
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Setup test execution environment.
-        run: pip3 install -r requirements-meta.txt
-      - name: Run tox tests
-        run: tox -- --durations=0 --timeout=240
+          python-version: "3.12"
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[jinja2]"
+          python -m pip install -r requirements-test.txt
+      - name: Run unit tests
+        run: python -m pytest tests/unit -q
+
+  integration-tests-windows:
+    runs-on: windows-latest
+    needs: unit-tests
+    env:
+      TEST_BROWSER: chrome
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[jinja2]"
+          python -m pip install -r requirements-test.txt
+      - name: Run integration tests
+        run: python -m pytest tests/integration -q
 
   typecheck:
-    strategy:
-      matrix:
-        os: [windows-latest]
-
-    runs-on: ${{ matrix.os }}
-
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-      - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/checkout@v4
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
-      - name: Setup test execution environment.
-        run: pip3 install -r requirements-meta.txt
-      - name: Run tox tests
-        run: tox -e typecheck
+          python-version: "3.12"
+      - name: Install typecheck dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-test.txt
+      - name: Run type checks
+        run: python -m mypy --strict eel
