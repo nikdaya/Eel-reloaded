@@ -211,14 +211,14 @@ eel.start(
 
 #### Server and network
 
-| Option           | Type        | Default                  | Description                                         |
-| ---------------- | ----------- | ------------------------ | --------------------------------------------------- |
-| `host`           | `str`       | `'localhost'`            | Hostname used by the web server.                    |
-| `port`           | `int`       | `8000`                   | Port used by the web server. Use `0` for auto-pick. |
-| `all_interfaces` | `bool`      | `False`                  | Listen on all interfaces instead of localhost only. |
-| `default_path`   | `str`       | `'index.html'`           | File served for `/`.                                |
-| `disable_cache`  | `bool`      | `True`                   | Serve assets with `Cache-Control: no-store`.        |
-| `extra_routes`   | `list[Route \| WebSocketRoute] \| None` | `None`                    | Extra Starlette routes inserted before Eel's static catch-all route. |
+| Option           | Type                                    | Default        | Description                                                          |
+| ---------------- | --------------------------------------- | -------------- | -------------------------------------------------------------------- |
+| `host`           | `str`                                   | `'localhost'`  | Hostname used by the web server.                                     |
+| `port`           | `int`                                   | `8000`         | Port used by the web server. Use `0` for auto-pick.                  |
+| `all_interfaces` | `bool`                                  | `False`        | Listen on all interfaces instead of localhost only.                  |
+| `default_path`   | `str`                                   | `'index.html'` | File served for `/`.                                                 |
+| `disable_cache`  | `bool`                                  | `True`         | Serve assets with `Cache-Control: no-store`.                         |
+| `extra_routes`   | `list[Route \| WebSocketRoute] \| None` | `None`         | Extra Starlette routes inserted before Eel's static catch-all route. |
 
 #### Browser and window behavior
 
@@ -270,6 +270,19 @@ def my_python_function(a, b):
 console.log("Calling Python...");
 eel.my_python_function(1, 2); // This calls the Python function that was decorated
 ```
+
+By default, exposed Python functions run in a worker thread (`execution="worker"`).
+For APIs that must run on Python's main thread (for example Tkinter dialogs), set:
+
+```python
+@eel.expose(execution="main")
+def choose_file_native():
+  ...
+```
+
+Use `execution="main"` only for UI APIs that require it. Running heavy work in main-thread mode can block the event loop and delay websocket responses.
+
+For a full working example, see [examples/11 - main_thread_file_picker](examples/11%20-%20main_thread_file_picker).
 
 Similarly, any Javascript functions which are exposed like this...
 
@@ -496,6 +509,8 @@ Common issues and quick checks:
   Verify `eel.init('web_folder')` path and `default_path` / `start` URL names.
 - Edge app mode behavior differs across machines:
   Test with `mode='edge', app_mode=True` and keep browser flags in `cmdline_args` explicit for reproducibility.
+- `RuntimeError: main thread is not in main loop` when calling native dialogs (Tkinter):
+  Expose that function with `@eel.expose(execution="main")` and run `eel.start(..., block=True)` from the Python main thread. See [examples/11 - main_thread_file_picker](examples/11%20-%20main_thread_file_picker).
 
 If the issue persists, open an issue with:
 

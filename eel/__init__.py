@@ -12,7 +12,13 @@ import threading
 import concurrent.futures
 from contextlib import asynccontextmanager
 from typing import Any, Callable, Literal, cast
-from eel.types import GeometryRectT, OptionsDictT, StartPageT, WebSocketT
+from eel.types import (
+    ExposeExecutionPolicyT,
+    GeometryRectT,
+    OptionsDictT,
+    StartPageT,
+    WebSocketT,
+)
 import random as rnd
 import importlib.resources as importlib_resources
 import uvicorn
@@ -42,6 +48,7 @@ _call_return_callbacks: dict[
 ] = {}
 _call_number: int = 0
 _exposed_functions: dict[Any, Any] = {}
+_exposed_function_execution: dict[str, ExposeExecutionPolicyT] = {}
 _js_functions: list[Any] = []
 _mock_queue: list[Any] = []
 _mock_queue_done: set[Any] = set()
@@ -98,7 +105,11 @@ api_error_message: str = """
 # Public functions
 
 
-def expose(name_or_function: Callable[..., Any] | None = None) -> Callable[..., Any]:
+def expose(
+    name_or_function: Callable[..., Any] | str | None = None,
+    *,
+    execution: ExposeExecutionPolicyT = "worker",
+) -> Callable[..., Any]:
     """Decorator to expose Python callables via Eel's JavaScript API.
 
     When an exposed function is called, a callback function can be passed
@@ -132,22 +143,32 @@ def expose(name_or_function: Callable[..., Any] | None = None) -> Callable[..., 
 
         Alice said hello from the JavaScript world!
 
+    :param execution: Execution policy for this exposed function.
+        - ``"worker"`` (default): run in Eel's thread pool.
+        - ``"main"``: run on the event-loop thread; if that thread is not the
+          Python main thread, call fails with ``RuntimeError``.
+
     """
-    # Deal with '@eel.expose()' - treat as '@eel.expose'
+    # Deal with '@eel.expose()' and '@eel.expose(execution="...")'.
     if name_or_function is None:
-        return expose
+
+        def decorator(function: Callable[..., Any]) -> Callable[..., Any]:
+            _expose(function.__name__, function, execution)
+            return function
+
+        return decorator
 
     if isinstance(name_or_function, str):  # Called as '@eel.expose("my_name")'
         name = name_or_function
 
-        def decorator(function: Callable[..., Any]) -> Any:
-            _expose(name, function)
+        def decorator(function: Callable[..., Any]) -> Callable[..., Any]:
+            _expose(name, function, execution)
             return function
 
         return decorator
     else:
         function = name_or_function
-        _expose(function.__name__, function)
+        _expose(function.__name__, function, execution)
         return function
 
 
@@ -511,7 +532,7 @@ def _get_geometry_page_path(page: StartPageT) -> str | None:
     return None
 
 
-def sleep(seconds: Union[int, float]) -> None:
+def sleep(seconds: int | float) -> None:
     """Sleep for the given number of seconds.
 
     Safe to call from any Python function exposed via :func:`eel.expose`.
@@ -723,9 +744,9 @@ async def _process_message(message: dict[str, Any], ws: WebSocket) -> None:
         error_info: dict[str, Any] = {}
         try:
             func = _exposed_functions[message["name"]]
-            loop = asyncio.get_running_loop()
-            return_val = await loop.run_in_executor(
-                _executor, lambda: func(*message["args"])
+            execution = _exposed_function_execution.get(message["name"], "worker")
+            return_val = await _invoke_exposed_function(
+                func, message["args"], execution
             )
             status = "ok"
         except Exception as e:
@@ -855,10 +876,34 @@ def _call_return(
     return return_func
 
 
-def _expose(name: str, function: Callable[..., Any]) -> None:
+def _expose(
+    name: str,
+    function: Callable[..., Any],
+    execution: ExposeExecutionPolicyT = "worker",
+) -> None:
+    if execution not in ("worker", "main"):
+        raise ValueError('execution must be either "worker" or "main"')
+
     msg = 'Already exposed function with name "%s"' % name
     assert name not in _exposed_functions, msg
     _exposed_functions[name] = function
+    _exposed_function_execution[name] = execution
+
+
+async def _invoke_exposed_function(
+    function: Callable[..., Any], args: list[Any], execution: ExposeExecutionPolicyT
+) -> Any:
+    if execution == "main":
+        if threading.current_thread() is not threading.main_thread():
+            raise RuntimeError(
+                'Exposed function requires execution="main", but current event loop '
+                "is not running on Python's main thread. Use eel.start(..., block=True) "
+                "from the main thread."
+            )
+        return function(*args)
+
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(_executor, lambda: function(*args))
 
 
 def _detect_shutdown() -> None:

@@ -11,6 +11,7 @@ else:
 
 
 StartPageT: TypeAlias = str | dict[str, str | int]
+ExposeExecutionPolicyT: TypeAlias = Literal["worker", "main"]
 
 
 class GeometryRectT(TypedDict, total=False):

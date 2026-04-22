@@ -134,6 +134,90 @@ def test_process_message_serializes_bytes_return_values(monkeypatch):
     ]
 
 
+def test_expose_execution_policy_is_registered():
+    @eel.expose("execution_policy_main", execution="main")
+    def _sample():
+        return "ok"
+
+    assert eel._exposed_function_execution["execution_policy_main"] == "main"
+
+
+def test_process_message_execution_main_runs_on_main_thread(monkeypatch):
+    sent = []
+
+    @eel.expose("thread_probe_main", execution="main")
+    def thread_probe_main():
+        return threading.current_thread() is threading.main_thread()
+
+    async def capture_send(_ws, msg):
+        sent.append(json.loads(msg))
+
+    monkeypatch.setattr(eel, "_send", capture_send)
+
+    asyncio.run(
+        eel._process_message(
+            {"call": 101, "name": "thread_probe_main", "args": []},
+            mock.Mock(),
+        )
+    )
+
+    assert sent[0]["status"] == "ok"
+    assert sent[0]["value"] is True
+
+
+def test_process_message_default_worker_runs_outside_main_thread(monkeypatch):
+    sent = []
+
+    @eel.expose("thread_probe_worker")
+    def thread_probe_worker():
+        return threading.current_thread() is threading.main_thread()
+
+    async def capture_send(_ws, msg):
+        sent.append(json.loads(msg))
+
+    monkeypatch.setattr(eel, "_send", capture_send)
+
+    asyncio.run(
+        eel._process_message(
+            {"call": 102, "name": "thread_probe_worker", "args": []},
+            mock.Mock(),
+        )
+    )
+
+    assert sent[0]["status"] == "ok"
+    assert sent[0]["value"] is False
+
+
+def test_process_message_execution_main_fails_if_event_loop_is_not_main_thread(
+    monkeypatch,
+):
+    sent = []
+
+    @eel.expose("thread_probe_wrong_loop", execution="main")
+    def thread_probe_wrong_loop():
+        return "ok"
+
+    async def capture_send(_ws, msg):
+        sent.append(json.loads(msg))
+
+    monkeypatch.setattr(eel, "_send", capture_send)
+
+    def run_in_background_thread():
+        asyncio.run(
+            eel._process_message(
+                {"call": 103, "name": "thread_probe_wrong_loop", "args": []},
+                mock.Mock(),
+            )
+        )
+
+    worker = threading.Thread(target=run_in_background_thread)
+    worker.start()
+    worker.join()
+
+    assert sent[0]["status"] == "error"
+    assert "main thread" in sent[0]["error"]["errorText"]
+
+
 def test_broadcast_serializes_send_per_websocket(monkeypatch):
     class FakeWebSocket:
         def __init__(self):
@@ -153,7 +237,9 @@ def test_broadcast_serializes_send_per_websocket(monkeypatch):
     monkeypatch.setattr(eel, "_websocket_send_locks", {})
 
     async def main():
-        await asyncio.gather(*(eel._broadcast(f"message-{index}") for index in range(10)))
+        await asyncio.gather(
+            *(eel._broadcast(f"message-{index}") for index in range(10))
+        )
 
     asyncio.run(main())
 
