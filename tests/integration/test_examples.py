@@ -124,3 +124,22 @@ def test_11_connection_failure_rejects_pending_calls(driver: webdriver.Remote):
         assert any(
             "EEL_CONNECTION_REJECTED" in entry["message"] for entry in console_logs
         )
+
+
+def test_12_wasm_frontend_benchmark(driver: webdriver.Remote):
+    with get_eel_server("examples/12 - wasm_frontend/app.py", "index.html") as eel_url:
+        driver.get(eel_url)
+        assert driver.title == "Eel + WASM frontend example"
+
+        driver.find_element(value="run").click()
+
+        WebDriverWait(driver, 20.0).until(
+            expected_conditions.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#out"), "WASM add result sample: 20"
+            )
+        )
+        WebDriverWait(driver, 20.0).until(
+            expected_conditions.text_to_be_present_in_element(
+                (By.CSS_SELECTOR, "#out"), "JS time:"
+            )
+        )

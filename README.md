@@ -513,6 +513,17 @@ Notes:
 - Keep a JS fallback path for unsupported environments or loading failures.
 - If your app moves large binary payloads between Python and JS, consider introducing explicit binary channels (`bytes` -> `Uint8Array`) in a future bridge extension.
 
+Proposed future bridge API for binary payloads:
+
+- Python -> JS:
+  - Return `bytes` from Python and expose helper on JS side to materialize `Uint8Array` without user boilerplate.
+- JS -> Python:
+  - Add helper like `eel.to_bytes(uint8Array)` that serializes to a compact transfer format and reconstructs `bytes` in Python.
+- Optional transport mode:
+  - Add `binary_mode="json"|"base64"` start option for explicit interoperability/performance tradeoffs.
+- Compatibility:
+  - Keep current JSON-safe behavior as default so existing apps remain unchanged.
+
 ## Troubleshooting
 
 Common issues and quick checks:
