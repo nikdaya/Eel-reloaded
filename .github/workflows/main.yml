@@ -5,22 +5,23 @@ on:
     types: [published]
 
 jobs:
-  build:
-
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@master
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.x
-          architecture: x64
-      - name: Install setuptools
-        run: pip install setuptools==76.1.0
-      - name: Build a source distribution
-        run: python setup.py sdist
+          python-version: "3.12"
+          architecture: "x64"
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+      - name: Build source and wheel distributions
+        run: python -m build
       - name: Publish to prod PyPI
         uses: pypa/gh-action-pypi-publish@4f4304928fc886cd021893f6defb1bd53d0a1e5a
         with:

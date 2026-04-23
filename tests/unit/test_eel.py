@@ -269,6 +269,52 @@ def test_start_waits_for_server_before_show(monkeypatch):
     assert order == ["run", "show"]
 
 
+def test_start_timeout_error_mentions_configured_seconds(monkeypatch):
+    class FakeServer:
+        def __init__(self, config):
+            self.config = config
+            self.should_exit = False
+
+        def run(self):
+            return None
+
+    class FakeThread:
+        def __init__(self, target, daemon):
+            self.target = target
+            self.daemon = daemon
+
+        def start(self):
+            return None
+
+        def join(self, timeout=None):
+            return None
+
+    class NeverSetEvent:
+        def clear(self):
+            return None
+
+        def wait(self, timeout=None):
+            return False
+
+    monkeypatch.setattr(eel, "_build_asgi_app", lambda: object())
+    monkeypatch.setattr(eel.uvicorn, "Server", FakeServer)
+    monkeypatch.setattr(eel.threading, "Thread", FakeThread)
+    monkeypatch.setattr(eel, "_loop_ready", NeverSetEvent())
+    monkeypatch.setattr(eel, "_server_ready_timeout_seconds", 1.25)
+
+    with pytest.raises(RuntimeError, match="1.2 seconds"):
+        eel.start("index.html", mode=False, block=False)
+
+
+def test_serve_static_blocks_path_traversal(tmp_path, monkeypatch):
+    monkeypatch.setattr(eel, "root_path", str(tmp_path))
+    eel._start_args["disable_cache"] = True
+
+    response = asyncio.run(eel._serve_static("..\\outside.txt"))
+
+    assert response.status_code == 403
+
+
 def test_show_stores_geometry_for_string_pages(monkeypatch):
     opened = {}
     eel._start_args["geometry"] = {}
@@ -398,6 +444,19 @@ def test_eel_js_exposes_connection_failure_apis():
     assert "ready: function" in eel._eel_js
     assert "set_connection_timeout: function" in eel._eel_js
     assert "_handle_connection_failure: function" in eel._eel_js
+
+
+def test_binary_bridge_helpers_roundtrip():
+    payload = b"\x00\x01\x7f\xff"
+    as_list = eel.to_uint8_array(payload)
+
+    assert as_list == [0, 1, 127, 255]
+    assert eel.from_uint8_array(as_list) == payload
+
+
+def test_eel_js_exposes_binary_bridge_helpers():
+    assert "toUint8Array: function" in eel._eel_js
+    assert "fromUint8Array: function" in eel._eel_js
 
 
 def test_wasm_mimetype_is_registered():

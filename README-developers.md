@@ -1,5 +1,7 @@
 # Eel-reloaded Developers
 
+Project roadmap and implementation status are tracked in `ROADMAP.md`.
+
 ## Setting up your environment
 
 In order to start developing with Eel-reloaded you'll need to check out the code, set up a development and testing environment, and verify that everything is in order.

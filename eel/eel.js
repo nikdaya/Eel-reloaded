@@ -59,6 +59,32 @@ eel = {
     eel._websocket_open_timeout = ms;
   },
 
+  toUint8Array: function (value) {
+    if (value instanceof Uint8Array) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return new Uint8Array(value);
+    }
+
+    throw new TypeError("toUint8Array expects a Uint8Array or number[] payload.");
+  },
+
+  fromUint8Array: function (value) {
+    if (value instanceof Uint8Array) {
+      return Array.from(value);
+    }
+
+    if (ArrayBuffer.isView(value)) {
+      return Array.from(
+        new Uint8Array(value.buffer, value.byteOffset, value.byteLength),
+      );
+    }
+
+    throw new TypeError("fromUint8Array expects a Uint8Array-like payload.");
+  },
+
   _mock_py_functions: function () {
     for (let i = 0; i < eel._py_functions.length; i++) {
       let name = eel._py_functions[i];

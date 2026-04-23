@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Callable, Literal, TYPE_CHECKING, TypeAlias, TypedDict
+from typing import Any, Callable, Literal, TYPE_CHECKING, NotRequired, TypeAlias, TypedDict
 
 # TYPE_CHECKING guards keep runtime dependencies on jinja2 and starlette optional.
 if TYPE_CHECKING:
@@ -19,7 +19,7 @@ class GeometryRectT(TypedDict, total=False):
     position: tuple[int, int] | None
 
 
-class OptionsDictT(TypedDict, total=False):
+class OptionsDictT(TypedDict):
     mode: str | Literal[False] | None
     host: str
     port: int
@@ -37,4 +37,4 @@ class OptionsDictT(TypedDict, total=False):
     icon: str | Literal[False] | None
     shutdown_delay: float
     suppress_error: bool
-    jinja_env: JinjaEnvironmentT
+    jinja_env: NotRequired[JinjaEnvironmentT]

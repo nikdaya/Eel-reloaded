@@ -67,8 +67,15 @@ root_path: str  # Later assigned as global by init()
 # Can be overridden through `eel.init` with the kwarg `js_result_timeout` (default: 10000)
 _js_result_timeout: int = 10000
 
+try:
+    _server_ready_timeout_seconds = float(
+        os.environ.get("EEL_SERVER_READY_TIMEOUT_SECONDS", "15.0")
+    )
+except ValueError:
+    _server_ready_timeout_seconds = 15.0
+
 # Attribute holding the start args from calls to eel.start()
-_start_args: OptionsDictT = {}
+_start_args: OptionsDictT = cast(OptionsDictT, {})
 
 # Extra Starlette routes injected via eel.start(extra_routes=[...])
 _extra_routes: list = []
@@ -178,6 +185,20 @@ def get_context() -> Context:
     return _context
 
 
+def to_uint8_array(payload: bytes | bytearray | memoryview) -> list[int]:
+    """Convert Python binary payloads to JSON-safe integer arrays.
+
+    This helper is intended for explicit binary bridge code paths where the
+    frontend expects a ``Uint8Array``.
+    """
+    return list(bytes(payload))
+
+
+def from_uint8_array(values: list[int]) -> bytes:
+    """Convert a JSON integer array into ``bytes`` for Python processing."""
+    return bytes(values)
+
+
 # Regex to find JS functions exposed via eel.expose() or window.eel.expose().
 # Handles: eel.expose(name), eel.expose("name"), eel.expose(expr, "name"),
 #          eel.expose((function(e){}), "name"), window.eel.expose(name, 'alias')
@@ -283,10 +304,10 @@ def start(
     port: int = 8000,
     block: bool = True,
     jinja_templates: str | None = None,
-    cmdline_args: list[str] = ["--disable-http-cache"],
+    cmdline_args: list[str] | None = None,
     size: tuple[int, int] | None = None,
     position: tuple[int, int] | None = None,
-    geometry: dict[str, tuple[int, int]] = {},
+    geometry: dict[str, GeometryRectT] | None = None,
     close_callback: Callable[..., Any] | None = None,
     app_mode: bool = True,
     all_interfaces: bool = False,
@@ -374,6 +395,10 @@ def start(
     """
     global _extra_routes
     _extra_routes = list(extra_routes) if extra_routes else []
+    resolved_cmdline_args = (
+        cmdline_args if cmdline_args is not None else ["--disable-http-cache"]
+    )
+    resolved_geometry = geometry if geometry is not None else {}
     if mode == "chrome-app":
         mode = "chrome"
         app_mode = True
@@ -384,10 +409,10 @@ def start(
             "port": port,
             "block": block,
             "jinja_templates": jinja_templates,
-            "cmdline_args": cmdline_args,
+            "cmdline_args": resolved_cmdline_args,
             "size": size,
             "position": position,
-            "geometry": geometry,
+            "geometry": resolved_geometry,
             "close_callback": close_callback,
             "app_mode": app_mode,
             "all_interfaces": all_interfaces,
@@ -446,10 +471,13 @@ def start(
     server_thread = threading.Thread(target=server.run, daemon=not _start_args["block"])
     server_thread.start()
 
-    if not _loop_ready.wait(timeout=5.0):
+    if not _loop_ready.wait(timeout=_server_ready_timeout_seconds):
         server.should_exit = True
         server_thread.join(timeout=5.0)
-        raise RuntimeError("Eel server did not become ready within 5 seconds")
+        raise RuntimeError(
+            "Eel server did not become ready within "
+            f"{_server_ready_timeout_seconds:.1f} seconds"
+        )
 
     try:
         # Launch the browser only after the ASGI server is ready to accept connections.
