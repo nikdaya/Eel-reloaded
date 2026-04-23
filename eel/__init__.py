@@ -20,6 +20,7 @@ from eel.types import (
     WebSocketT,
 )
 import random as rnd
+import importlib
 import importlib.resources as importlib_resources
 import uvicorn
 from starlette.routing import Route, WebSocketRoute
@@ -74,8 +75,30 @@ try:
 except ValueError:
     _server_ready_timeout_seconds = 15.0
 
+def _default_start_args() -> OptionsDictT:
+    return {
+        "mode": "chrome",
+        "host": "localhost",
+        "port": 8000,
+        "block": True,
+        "jinja_templates": None,
+        "cmdline_args": ["--disable-http-cache"],
+        "size": None,
+        "position": None,
+        "geometry": {},
+        "close_callback": None,
+        "app_mode": True,
+        "all_interfaces": False,
+        "disable_cache": True,
+        "default_path": "index.html",
+        "icon": None,
+        "shutdown_delay": 1.0,
+        "suppress_error": False,
+    }
+
+
 # Attribute holding the start args from calls to eel.start()
-_start_args: OptionsDictT = cast(OptionsDictT, {})
+_start_args: OptionsDictT = _default_start_args()
 
 # Extra Starlette routes injected via eel.start(extra_routes=[...])
 _extra_routes: list = []
@@ -393,7 +416,7 @@ def start(
         ASGI app *before* Eel's catch-all static-file route. Use this to add
         custom HTTP endpoints to the same server. *Default:* ``None``.
     """
-    global _extra_routes
+    global _extra_routes, _start_args
     _extra_routes = list(extra_routes) if extra_routes else []
     resolved_cmdline_args = (
         cmdline_args if cmdline_args is not None else ["--disable-http-cache"]
@@ -402,27 +425,25 @@ def start(
     if mode == "chrome-app":
         mode = "chrome"
         app_mode = True
-    _start_args.update(
-        {
-            "mode": mode,
-            "host": host,
-            "port": port,
-            "block": block,
-            "jinja_templates": jinja_templates,
-            "cmdline_args": resolved_cmdline_args,
-            "size": size,
-            "position": position,
-            "geometry": resolved_geometry,
-            "close_callback": close_callback,
-            "app_mode": app_mode,
-            "all_interfaces": all_interfaces,
-            "disable_cache": disable_cache,
-            "default_path": default_path,
-            "icon": icon,
-            "shutdown_delay": shutdown_delay,
-            "suppress_error": suppress_error,
-        }
-    )
+    _start_args = {
+        "mode": mode,
+        "host": host,
+        "port": port,
+        "block": block,
+        "jinja_templates": jinja_templates,
+        "cmdline_args": resolved_cmdline_args,
+        "size": size,
+        "position": position,
+        "geometry": resolved_geometry,
+        "close_callback": close_callback,
+        "app_mode": app_mode,
+        "all_interfaces": all_interfaces,
+        "disable_cache": disable_cache,
+        "default_path": default_path,
+        "icon": icon,
+        "shutdown_delay": shutdown_delay,
+        "suppress_error": suppress_error,
+    }
 
     if _start_args["port"] == 0:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -431,7 +452,10 @@ def start(
         sock.close()
 
     if _start_args["jinja_templates"] is not None:
-        from jinja2 import Environment, FileSystemLoader, select_autoescape
+        jinja2_module = importlib.import_module("jinja2")
+        Environment = getattr(jinja2_module, "Environment")
+        FileSystemLoader = getattr(jinja2_module, "FileSystemLoader")
+        select_autoescape = getattr(jinja2_module, "select_autoescape")
 
         if not isinstance(_start_args["jinja_templates"], str):
             raise TypeError("'jinja_templates' start_arg/option must be of type str")
