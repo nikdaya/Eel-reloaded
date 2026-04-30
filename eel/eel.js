@@ -23,6 +23,7 @@ eel = {
   // These get dynamically added by library when file is served
   /** _py_functions **/
   /** _start_geometry **/
+  /** _start_options **/
 
   _guid: ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
     (
@@ -51,6 +52,8 @@ eel = {
 
   _ready_reject: null,
 
+  _start_options: { disable_spinner: false },
+
   ready: function () {
     return eel._ready_promise;
   },
@@ -68,7 +71,9 @@ eel = {
       return new Uint8Array(value);
     }
 
-    throw new TypeError("toUint8Array expects a Uint8Array or number[] payload.");
+    throw new TypeError(
+      "toUint8Array expects a Uint8Array or number[] payload.",
+    );
   },
 
   fromUint8Array: function (value) {
@@ -280,11 +285,49 @@ eel = {
     }
   },
 
+  _disable_bootstrap_spinners: function () {
+    const selectors = [
+      "[data-eel-spinner]",
+      "[data-loading='spinner']",
+      ".eel-spinner",
+      ".loading-spinner",
+      ".spinner-overlay",
+      "#spinner",
+      "#loading",
+      "#loading-spinner",
+    ];
+
+    for (let i = 0; i < selectors.length; i++) {
+      let elements = document.querySelectorAll(selectors[i]);
+      for (let j = 0; j < elements.length; j++) {
+        let element = elements[j];
+        element.setAttribute("aria-hidden", "true");
+        element.style.display = "none";
+      }
+    }
+
+    if (document.body != null) {
+      document.body.classList.remove("loading", "is-loading", "spinner-active");
+      document.body.setAttribute("data-eel-spinner-disabled", "true");
+    }
+
+    document.documentElement.classList.remove(
+      "loading",
+      "is-loading",
+      "spinner-active",
+    );
+    document.documentElement.setAttribute("data-eel-spinner-disabled", "true");
+  },
+
   _init: function () {
     eel._mock_py_functions();
     eel._reset_ready_promise();
 
     document.addEventListener("DOMContentLoaded", function (event) {
+      if (eel._start_options && eel._start_options.disable_spinner === true) {
+        eel._disable_bootstrap_spinners();
+      }
+
       let page = window.location.pathname.substring(1);
       eel._position_window(page);
 

@@ -1,5 +1,13 @@
 from __future__ import annotations
-from typing import Any, Callable, Literal, TYPE_CHECKING, NotRequired, TypeAlias, TypedDict
+from typing import (
+    Any,
+    Callable,
+    Literal,
+    TYPE_CHECKING,
+    NotRequired,
+    TypeAlias,
+    TypedDict,
+)
 
 # TYPE_CHECKING guards keep runtime dependencies on jinja2 and starlette optional.
 if TYPE_CHECKING:
@@ -35,6 +43,7 @@ class OptionsDictT(TypedDict):
     disable_cache: bool
     default_path: str
     icon: str | Literal[False] | None
+    disable_spinner: bool
     shutdown_delay: float
     suppress_error: bool
     jinja_env: NotRequired[JinjaEnvironmentT]

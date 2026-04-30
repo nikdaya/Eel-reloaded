@@ -459,5 +459,18 @@ def test_eel_js_exposes_binary_bridge_helpers():
     assert "fromUint8Array: function" in eel._eel_js
 
 
+def test_eel_js_handler_injects_disable_spinner_option(monkeypatch):
+    eel._start_args["size"] = None
+    eel._start_args["position"] = None
+    eel._start_args["geometry"] = {}
+    eel._start_args["disable_spinner"] = True
+    monkeypatch.setattr(eel, "_exposed_functions", {})
+
+    response = asyncio.run(eel._eel_js_handler(mock.Mock()))
+    body = response.body.decode("utf-8")
+
+    assert '"disable_spinner": true' in body
+
+
 def test_wasm_mimetype_is_registered():
     assert mimetypes.guess_type("module.wasm")[0] == "application/wasm"

@@ -1,47 +1,52 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Main-thread file picker</title>
     <script type="text/javascript" src="/eel.js"></script>
     <style>
-      body {
-        font-family: Segoe UI, sans-serif;
-        margin: 24px;
-        line-height: 1.4;
-      }
-      button {
-        padding: 10px 14px;
-      }
-      #result {
-        margin-top: 12px;
-        white-space: pre-wrap;
-        word-break: break-all;
-      }
+        body {
+            font-family: Segoe UI, sans-serif;
+            margin: 24px;
+            line-height: 1.4;
+        }
+
+        button {
+            padding: 10px 14px;
+        }
+
+        #result {
+            margin-top: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
     </style>
-  </head>
-  <body>
+</head>
+
+<body>
     <h1>Main-thread file picker</h1>
     <p>This example exposes a Tkinter dialog with <code>execution="main"</code>.</p>
     <button id="pick">Choose file</button>
     <div id="result">No file selected.</div>
 
     <script type="text/javascript">
-      const result = document.getElementById("result");
-      const pickBtn = document.getElementById("pick");
+        const result = document.getElementById("result");
+        const pickBtn = document.getElementById("pick");
 
-      async function pickFile() {
-        try {
-          await eel.ready();
-          const path = await eel.choose_file()();
-          result.textContent = path ? `Selected: ${path}` : "No file selected.";
-        } catch (error) {
-          result.textContent = `Error: ${String(error)}`;
+        async function pickFile() {
+            try {
+                await eel.ready();
+                const path = await eel.choose_file()();
+                result.textContent = path ? `Selected: ${path}` : "No file selected.";
+            } catch (error) {
+                result.textContent = `Error: ${String(error)}`;
+            }
         }
-      }
 
-      pickBtn.addEventListener("click", pickFile);
+        pickBtn.addEventListener("click", pickFile);
     </script>
-  </body>
+</body>
+
 </html>

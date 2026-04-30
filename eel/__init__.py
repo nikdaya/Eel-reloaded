@@ -75,6 +75,7 @@ try:
 except ValueError:
     _server_ready_timeout_seconds = 15.0
 
+
 def _default_start_args() -> OptionsDictT:
     return {
         "mode": "chrome",
@@ -92,6 +93,7 @@ def _default_start_args() -> OptionsDictT:
         "disable_cache": True,
         "default_path": "index.html",
         "icon": None,
+        "disable_spinner": False,
         "shutdown_delay": 1.0,
         "suppress_error": False,
     }
@@ -337,6 +339,7 @@ def start(
     disable_cache: bool = True,
     default_path: str = "index.html",
     icon: str | Literal[False] | None = None,
+    disable_spinner: bool = False,
     shutdown_delay: float = 1.0,
     suppress_error: bool = False,
     extra_routes: list | None = None,
@@ -403,6 +406,10 @@ def start(
         :code:`'/assets/app-icon.svg'` to use your own asset, leave as
         ``None`` to use the bundled Eel-reloaded icon, or pass ``False`` to
         disable automatic icon injection.
+    :param disable_spinner: When ``True``, :file:`eel.js` will hide common
+        loading spinner overlays during bootstrap. This is useful for apps
+        that can otherwise get visually stuck if the JS-side loading state is
+        not cleared after a connection issue.
     :param shutdown_delay: Timer configurable for Eel's shutdown detection
         mechanism, whereby when any websocket closes, it waits *shutdown_delay*
         seconds, and then checks if there are now any websocket connections.
@@ -441,6 +448,7 @@ def start(
         "disable_cache": disable_cache,
         "default_path": default_path,
         "icon": icon,
+        "disable_spinner": disable_spinner,
         "shutdown_delay": shutdown_delay,
         "suppress_error": suppress_error,
     }
@@ -639,11 +647,17 @@ async def _eel_js_handler(request: Request) -> Response:
         "default": {"size": _start_args["size"], "position": _start_args["position"]},
         "pages": _start_args["geometry"],
     }
+    start_options = {
+        "disable_spinner": _start_args.get("disable_spinner", False),
+    }
     page = _eel_js.replace(
         "/** _py_functions **/", "_py_functions: %s," % list(_exposed_functions.keys())
     )
     page = page.replace(
         "/** _start_geometry **/", "_start_geometry: %s," % _safe_json(start_geometry)
+    )
+    page = page.replace(
+        "/** _start_options **/", "_start_options: %s," % _safe_json(start_options)
     )
     headers = _cache_headers()
     return Response(content=page, media_type="application/javascript", headers=headers)
